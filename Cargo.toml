@@ -1,0 +1,32 @@
+[package]
+name = "rust-ai-core"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.92"
+license = "MIT"
+authors = ["Tyler Zervas <tz-dev@vectorweight.com>"]
+description = "Shared core utilities for the rust-ai ecosystem: device selection, errors, traits, and CubeCL interop"
+repository = "https://github.com/tzervas/rust-ai-core"
+homepage = "https://github.com/tzervas/rust-ai-core"
+documentation = "https://docs.rs/rust-ai-core"
+keywords = ["machine-learning", "cuda", "gpu", "tensors", "deep-learning"]
+categories = ["science", "mathematics", "development-tools"]
+
+[dependencies]
+candle-core = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+# CubeCL for GPU kernel support
+cubecl = { version = "0.4", optional = true }
+cubecl-cuda = { version = "0.4", optional = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+[features]
+default = []
+cuda = ["candle-core/cuda", "dep:cubecl", "dep:cubecl-cuda"]
+
+[lints]
+workspace = true
