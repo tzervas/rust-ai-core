@@ -16,10 +16,11 @@ categories = ["science", "mathematics", "development-tools"]
 candle-core = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
+half = { workspace = true }
 
 # CubeCL for GPU kernel support
-cubecl = { version = "0.4", optional = true }
-cubecl-cuda = { version = "0.4", optional = true }
+cubecl = { workspace = true, optional = true }
+cubecl-cuda = { workspace = true, optional = true }
 
 [dev-dependencies]
 criterion = { workspace = true }

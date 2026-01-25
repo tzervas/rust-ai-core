@@ -46,6 +46,7 @@ use std::sync::Once;
 /// - `force_cpu`: Force CPU execution regardless of GPU availability
 /// - `crate_name`: Name of the crate for logging (used in warnings)
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct DeviceConfig {
     /// Preferred CUDA device ordinal.
     pub cuda_device: usize,
@@ -55,15 +56,6 @@ pub struct DeviceConfig {
     pub crate_name: Option<String>,
 }
 
-impl Default for DeviceConfig {
-    fn default() -> Self {
-        Self {
-            cuda_device: 0,
-            force_cpu: false,
-            crate_name: None,
-        }
-    }
-}
 
 impl DeviceConfig {
     /// Create a new device configuration with defaults.

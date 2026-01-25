@@ -146,7 +146,7 @@ pub trait Dequantize<Q>: Send + Sync {
 /// GPU/CPU dispatch trait for operations with both implementations.
 ///
 /// This trait enables the CUDA-first pattern: operations that have both
-/// GPU (CubeCL) and CPU implementations should implement this trait to
+/// GPU (`CubeCL`) and CPU implementations should implement this trait to
 /// automatically route to the appropriate backend.
 ///
 /// # Design Pattern
@@ -178,7 +178,7 @@ pub trait GpuDispatchable: Send + Sync {
     /// Output type for the operation.
     type Output;
 
-    /// Execute operation on GPU using CubeCL kernels.
+    /// Execute operation on GPU using `CubeCL` kernels.
     ///
     /// # Arguments
     ///

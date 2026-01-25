@@ -4,7 +4,7 @@
 //! # rust-ai-core
 //!
 //! Shared core utilities for the rust-ai ecosystem, providing unified abstractions
-//! for device selection, error handling, configuration validation, and CubeCL interop.
+//! for device selection, error handling, configuration validation, and `CubeCL` interop.
 //!
 //! ## Design Philosophy
 //!
@@ -17,7 +17,7 @@
 //! - [`device`] - CUDA-first device selection with environment variable overrides
 //! - [`error`] - Unified error types across all rust-ai crates
 //! - [`traits`] - Common traits for configs, quantization, and GPU dispatch
-//! - [`cubecl`] - CubeCL ↔ Candle tensor interoperability (feature-gated)
+//! - `cubecl` - `CubeCL` ↔ Candle tensor interoperability (feature-gated with `cuda` feature)
 //!
 //! ## Quick Start
 //!
@@ -40,7 +40,7 @@
 //!
 //! ## Feature Flags
 //!
-//! - `cuda` - Enable CUDA support via Candle and CubeCL kernels
+//! - `cuda` - Enable CUDA support via Candle and `CubeCL` kernels
 //!
 //! ## Crate Integration
 //!
@@ -69,4 +69,7 @@ pub use error::{CoreError, Result};
 pub use traits::{Dequantize, GpuDispatchable, Quantize, ValidatableConfig};
 
 #[cfg(feature = "cuda")]
-pub use cubecl::{candle_to_cubecl_handle, cubecl_to_candle_tensor, has_cubecl_cuda_support};
+pub use cubecl::{
+    allocate_output_buffer, candle_to_cubecl_handle, cubecl_to_candle_tensor,
+    has_cubecl_cuda_support, TensorBuffer,
+};

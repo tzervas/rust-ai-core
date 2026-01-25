@@ -193,7 +193,7 @@ pub fn cubecl_to_candle_tensor(buffer: &TensorBuffer, device: &Device) -> Result
                 .chunks_exact(4)
                 .map(|chunk| f32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]))
                 .collect();
-            Tensor::from_vec(data, &buffer.shape, device)?
+            Tensor::from_vec(data, buffer.shape.as_slice(), device)?
         }
         DType::F16 => {
             let data: Vec<half::f16> = buffer
@@ -201,7 +201,7 @@ pub fn cubecl_to_candle_tensor(buffer: &TensorBuffer, device: &Device) -> Result
                 .chunks_exact(2)
                 .map(|chunk| half::f16::from_le_bytes([chunk[0], chunk[1]]))
                 .collect();
-            Tensor::from_vec(data, &buffer.shape, device)?
+            Tensor::from_vec(data, buffer.shape.as_slice(), device)?
         }
         DType::BF16 => {
             let data: Vec<half::bf16> = buffer
@@ -209,7 +209,7 @@ pub fn cubecl_to_candle_tensor(buffer: &TensorBuffer, device: &Device) -> Result
                 .chunks_exact(2)
                 .map(|chunk| half::bf16::from_le_bytes([chunk[0], chunk[1]]))
                 .collect();
-            Tensor::from_vec(data, &buffer.shape, device)?
+            Tensor::from_vec(data, buffer.shape.as_slice(), device)?
         }
         _ => {
             return Err(CoreError::invalid_config(format!(
