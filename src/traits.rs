@@ -225,7 +225,9 @@ pub trait GpuDispatchable: Send + Sync {
         match device {
             Device::Cuda(_) => self.dispatch_gpu(input, device),
             Device::Cpu => self.dispatch_cpu(input, device),
-            Device::Metal(_) => Err(CoreError::device_not_available("Metal device not supported")),
+            Device::Metal(_) => Err(CoreError::device_not_available(
+                "Metal device not supported",
+            )),
         }
     }
 

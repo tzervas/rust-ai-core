@@ -314,7 +314,11 @@ impl MemoryTracker {
     #[must_use]
     pub fn estimate_with_overhead(&self, shape: &[usize], dtype: DType) -> usize {
         let raw = estimate_tensor_bytes(shape, dtype);
-        #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation, clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_sign_loss,
+            clippy::cast_possible_truncation,
+            clippy::cast_precision_loss
+        )]
         {
             (raw as f64 * self.overhead_factor) as usize
         }

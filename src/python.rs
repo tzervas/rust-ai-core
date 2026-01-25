@@ -55,7 +55,11 @@ fn estimate_attention_memory(
 ) -> PyResult<usize> {
     let candle_dtype = parse_dtype(dtype)?;
     Ok(memory::estimate_attention_memory(
-        batch_size, num_heads, seq_len, head_dim, candle_dtype,
+        batch_size,
+        num_heads,
+        seq_len,
+        head_dim,
+        candle_dtype,
     ))
 }
 
@@ -73,7 +77,9 @@ fn create_memory_tracker(limit_gb: f64, overhead_factor: f64) -> PyMemoryTracker
 /// Check if an allocation would fit within the tracker's limit.
 #[pyfunction]
 fn tracker_would_fit(tracker: &PyMemoryTracker, bytes: usize) -> PyResult<bool> {
-    let inner = tracker.inner.lock()
+    let inner = tracker
+        .inner
+        .lock()
         .map_err(|e| PyRuntimeError::new_err(format!("Lock poisoned: {e}")))?;
     Ok(inner.would_fit(bytes))
 }
@@ -81,16 +87,21 @@ fn tracker_would_fit(tracker: &PyMemoryTracker, bytes: usize) -> PyResult<bool> 
 /// Record an allocation in the tracker.
 #[pyfunction]
 fn tracker_allocate(tracker: &PyMemoryTracker, bytes: usize) -> PyResult<()> {
-    let inner = tracker.inner.lock()
+    let inner = tracker
+        .inner
+        .lock()
         .map_err(|e| PyRuntimeError::new_err(format!("Lock poisoned: {e}")))?;
-    inner.allocate(bytes)
+    inner
+        .allocate(bytes)
         .map_err(|e| PyRuntimeError::new_err(format!("Allocation failed: {e}")))
 }
 
 /// Record a deallocation in the tracker.
 #[pyfunction]
 fn tracker_deallocate(tracker: &PyMemoryTracker, bytes: usize) -> PyResult<()> {
-    let inner = tracker.inner.lock()
+    let inner = tracker
+        .inner
+        .lock()
         .map_err(|e| PyRuntimeError::new_err(format!("Lock poisoned: {e}")))?;
     inner.deallocate(bytes);
     Ok(())
@@ -99,7 +110,9 @@ fn tracker_deallocate(tracker: &PyMemoryTracker, bytes: usize) -> PyResult<()> {
 /// Get current allocation from the tracker.
 #[pyfunction]
 fn tracker_allocated_bytes(tracker: &PyMemoryTracker) -> PyResult<usize> {
-    let inner = tracker.inner.lock()
+    let inner = tracker
+        .inner
+        .lock()
         .map_err(|e| PyRuntimeError::new_err(format!("Lock poisoned: {e}")))?;
     Ok(inner.allocated_bytes())
 }
@@ -107,7 +120,9 @@ fn tracker_allocated_bytes(tracker: &PyMemoryTracker) -> PyResult<usize> {
 /// Get peak allocation from the tracker.
 #[pyfunction]
 fn tracker_peak_bytes(tracker: &PyMemoryTracker) -> PyResult<usize> {
-    let inner = tracker.inner.lock()
+    let inner = tracker
+        .inner
+        .lock()
         .map_err(|e| PyRuntimeError::new_err(format!("Lock poisoned: {e}")))?;
     Ok(inner.peak_bytes())
 }
@@ -115,7 +130,9 @@ fn tracker_peak_bytes(tracker: &PyMemoryTracker) -> PyResult<usize> {
 /// Get the memory limit from the tracker.
 #[pyfunction]
 fn tracker_limit_bytes(tracker: &PyMemoryTracker) -> PyResult<usize> {
-    let inner = tracker.inner.lock()
+    let inner = tracker
+        .inner
+        .lock()
         .map_err(|e| PyRuntimeError::new_err(format!("Lock poisoned: {e}")))?;
     Ok(inner.limit_bytes())
 }
@@ -129,7 +146,9 @@ fn tracker_estimate_with_overhead(
     dtype: &str,
 ) -> PyResult<usize> {
     let candle_dtype = parse_dtype(dtype)?;
-    let inner = tracker.inner.lock()
+    let inner = tracker
+        .inner
+        .lock()
         .map_err(|e| PyRuntimeError::new_err(format!("Lock poisoned: {e}")))?;
     Ok(inner.estimate_with_overhead(&shape, candle_dtype))
 }
@@ -137,7 +156,9 @@ fn tracker_estimate_with_overhead(
 /// Reset the memory tracker to initial state.
 #[pyfunction]
 fn tracker_reset(tracker: &PyMemoryTracker) -> PyResult<()> {
-    let inner = tracker.inner.lock()
+    let inner = tracker
+        .inner
+        .lock()
         .map_err(|e| PyRuntimeError::new_err(format!("Lock poisoned: {e}")))?;
     inner.reset();
     Ok(())
@@ -169,7 +190,10 @@ fn get_device_info(force_cpu: bool, cuda_device: usize) -> PyResult<HashMap<Stri
             candle_core::Device::Cuda(_cuda_dev) => {
                 result.insert("type".to_string(), "cuda".into_py(py));
                 result.insert("ordinal".to_string(), cuda_device.into_py(py));
-                result.insert("name".to_string(), format!("CUDA:{cuda_device}").into_py(py));
+                result.insert(
+                    "name".to_string(),
+                    format!("CUDA:{cuda_device}").into_py(py),
+                );
             }
             candle_core::Device::Cpu => {
                 result.insert("type".to_string(), "cpu".into_py(py));
@@ -228,9 +252,11 @@ fn init_logging(level: &str, timestamps: bool, ansi: bool) -> PyResult<()> {
         "info" => LogLevel::Info,
         "warn" | "warning" => LogLevel::Warn,
         "error" => LogLevel::Error,
-        _ => return Err(PyValueError::new_err(format!(
-            "Invalid log level: {level}. Use: trace, debug, info, warn, error"
-        ))),
+        _ => {
+            return Err(PyValueError::new_err(format!(
+                "Invalid log level: {level}. Use: trace, debug, info, warn, error"
+            )))
+        }
     };
 
     let config = LogConfig::new()
@@ -330,8 +356,14 @@ mod tests {
 
     #[test]
     fn test_parse_dtype() {
-        assert!(matches!(parse_dtype("f32").unwrap(), candle_core::DType::F32));
-        assert!(matches!(parse_dtype("bf16").unwrap(), candle_core::DType::BF16));
+        assert!(matches!(
+            parse_dtype("f32").unwrap(),
+            candle_core::DType::F32
+        ));
+        assert!(matches!(
+            parse_dtype("bf16").unwrap(),
+            candle_core::DType::BF16
+        ));
         assert!(parse_dtype("invalid").is_err());
     }
 
