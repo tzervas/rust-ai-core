@@ -217,12 +217,15 @@ pub trait GpuDispatchable: Send + Sync {
     /// # Returns
     ///
     /// Operation result from GPU or CPU path.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if the operation fails or if Metal device is used (not supported).
     fn dispatch(&self, input: &Self::Input, device: &Device) -> Result<Self::Output> {
         match device {
             Device::Cuda(_) => self.dispatch_gpu(input, device),
             Device::Cpu => self.dispatch_cpu(input, device),
-            #[allow(unreachable_patterns)]
-            _ => Err(CoreError::device_not_available(format!("{device:?}"))),
+            Device::Metal(_) => Err(CoreError::device_not_available("Metal device not supported")),
         }
     }
 

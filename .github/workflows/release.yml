@@ -1,0 +1,320 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v0.2.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # =============================================================================
+  # PREPARE: Convert workspace deps to explicit versions
+  # =============================================================================
+  prepare:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Convert workspace deps to explicit versions
+        run: |
+          # This script converts { workspace = true } deps to explicit versions
+          # Required when publishing a crate from a workspace to crates.io
+
+          if grep -q 'workspace = true' Cargo.toml; then
+            echo "Converting workspace dependencies to explicit versions..."
+
+            # Read version from Cargo.toml
+            VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+            echo "Package version: $VERSION"
+
+            # For this standalone crate, we don't need workspace conversion
+            # This is a placeholder for when the crate is part of a workspace
+            echo "No workspace deps found that need conversion"
+          fi
+
+      - name: Upload prepared source
+        uses: actions/upload-artifact@v4
+        with:
+          name: prepared-source
+          path: .
+          retention-days: 1
+
+  # =============================================================================
+  # BUILD AND TEST
+  # =============================================================================
+  test:
+    name: Test
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download prepared source
+        uses: actions/download-artifact@v4
+        with:
+          name: prepared-source
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Run tests
+        run: cargo test
+
+      - name: Build docs
+        run: cargo doc --no-deps
+
+  # =============================================================================
+  # PUBLISH TO CRATES.IO
+  # =============================================================================
+  publish-crates:
+    name: Publish to crates.io
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download prepared source
+        uses: actions/download-artifact@v4
+        with:
+          name: prepared-source
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+        run: cargo publish --no-verify
+
+  # =============================================================================
+  # BUILD PYTHON WHEELS
+  # =============================================================================
+  build-wheels-linux:
+    name: Build wheels (Linux ${{ matrix.target }})
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [x86_64, aarch64]
+    steps:
+      - name: Download prepared source
+        uses: actions/download-artifact@v4
+        with:
+          name: prepared-source
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist --find-interpreter
+          sccache: 'true'
+          manylinux: auto
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-linux-${{ matrix.target }}
+          path: dist
+
+  build-wheels-macos:
+    name: Build wheels (macOS ${{ matrix.target }})
+    needs: test
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        target: [x86_64, aarch64]
+    steps:
+      - name: Download prepared source
+        uses: actions/download-artifact@v4
+        with:
+          name: prepared-source
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}-apple-darwin
+          args: --release --out dist --find-interpreter
+          sccache: 'true'
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-macos-${{ matrix.target }}
+          path: dist
+
+  build-wheels-windows:
+    name: Build wheels (Windows)
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - name: Download prepared source
+        uses: actions/download-artifact@v4
+        with:
+          name: prepared-source
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: x86_64-pc-windows-msvc
+          args: --release --out dist --find-interpreter
+          sccache: 'true'
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-windows-x86_64
+          path: dist
+
+  build-sdist:
+    name: Build source distribution
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download prepared source
+        uses: actions/download-artifact@v4
+        with:
+          name: prepared-source
+
+      - name: Build sdist
+        uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+
+      - name: Upload sdist
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-sdist
+          path: dist
+
+  # =============================================================================
+  # PUBLISH TO PYPI
+  # =============================================================================
+  publish-pypi:
+    name: Publish to PyPI
+    needs:
+      - build-wheels-linux
+      - build-wheels-macos
+      - build-wheels-windows
+      - build-sdist
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/rust-ai-core-bindings/
+    steps:
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+
+  # =============================================================================
+  # CREATE GITHUB RELEASE
+  # =============================================================================
+  github-release:
+    name: Create GitHub Release
+    needs:
+      - publish-crates
+      - publish-pypi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+
+      - name: Get version from tag
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Extract changelog
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          VERSION_NUM="${VERSION#v}"
+          if [ -f CHANGELOG.md ]; then
+            CHANGELOG=$(awk "/^## \[?$VERSION_NUM\]?/,/^## \[?[0-9]/" CHANGELOG.md | head -n -1)
+            if [ -z "$CHANGELOG" ]; then
+              CHANGELOG="Release $VERSION"
+            fi
+          else
+            CHANGELOG="Release $VERSION"
+          fi
+          echo "$CHANGELOG" > changelog.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          body_path: changelog.txt
+          files: dist/*
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # =============================================================================
+  # CLEANUP
+  # =============================================================================
+  cleanup:
+    name: Cleanup artifacts
+    needs: github-release
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Delete build artifacts
+        uses: geekyeggo/delete-artifact@v4
+        with:
+          name: |
+            prepared-source
+            wheels-*
+          failOnError: false

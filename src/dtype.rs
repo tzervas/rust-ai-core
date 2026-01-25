@@ -174,10 +174,10 @@ impl DTypeExt for DType {
         }
     }
 
+    #[allow(clippy::match_same_arms)] // Explicit arms for documentation; wildcard for future dtypes
     fn accumulator_dtype(&self) -> DType {
         match self {
-            DType::F16 | DType::BF16 => DType::F32,
-            DType::F32 => DType::F32,
+            DType::F16 | DType::BF16 | DType::F32 => DType::F32,
             DType::F64 => DType::F64,
             // Integer accumulators: use i64 for safety
             DType::U8 | DType::U32 | DType::I16 | DType::I32 | DType::I64 => DType::I64,

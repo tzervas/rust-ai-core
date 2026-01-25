@@ -62,6 +62,7 @@
 //! | Feature | Description | Dependencies |
 //! |---------|-------------|--------------|
 //! | `cuda` | Enable CUDA support via Candle and `CubeCL` kernels | cubecl, cubecl-cuda |
+//! | `python` | Enable Python bindings via `PyO3` | pyo3, numpy |
 //!
 //! ## Crate Integration
 //!
@@ -96,6 +97,9 @@ pub mod traits;
 
 #[cfg(feature = "cuda")]
 pub mod cubecl;
+
+#[cfg(feature = "python")]
+pub mod python;
 
 // Re-exports for convenience.
 //

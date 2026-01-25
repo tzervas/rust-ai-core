@@ -39,6 +39,7 @@ use std::sync::Once;
 ///
 /// This struct captures these variations.
 #[derive(Debug, Clone)]
+#[allow(clippy::struct_excessive_bools)] // Each bool controls independent formatting option
 pub struct LogConfig {
     /// Default log level when `RUST_LOG` is not set.
     pub default_level: LogLevel,
@@ -155,7 +156,7 @@ pub enum LogLevel {
 
 impl LogLevel {
     /// Convert to a tracing filter string.
-    fn as_filter_str(&self) -> &'static str {
+    fn as_filter_str(self) -> &'static str {
         match self {
             Self::Error => "error",
             Self::Warn => "warn",
@@ -264,6 +265,7 @@ macro_rules! log_metric {
 ///
 /// Every training loop logs steps. Having a dedicated function ensures
 /// consistent formatting and field names across all crates.
+#[allow(clippy::cast_precision_loss)] // Precision loss acceptable for progress display
 pub fn log_training_step(step: usize, total_steps: usize, loss: f64, lr: f64) {
     let progress_pct = if total_steps > 0 {
         (step as f64 / total_steps as f64) * 100.0
@@ -289,6 +291,7 @@ pub fn log_training_step(step: usize, total_steps: usize, loss: f64, lr: f64) {
 /// * `allocated_bytes` - Currently allocated bytes
 /// * `peak_bytes` - Peak allocation
 /// * `context` - Description of what operation is being tracked
+#[allow(clippy::cast_precision_loss)] // Precision loss acceptable for memory display
 pub fn log_memory_usage(allocated_bytes: usize, peak_bytes: usize, context: &str) {
     let allocated_mb = allocated_bytes as f64 / (1024.0 * 1024.0);
     let peak_mb = peak_bytes as f64 / (1024.0 * 1024.0);
