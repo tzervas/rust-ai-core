@@ -1,6 +1,6 @@
 [package]
 name = "rust-ai-core"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.92"
 license = "MIT"
@@ -16,6 +16,7 @@ categories = ["science", "mathematics", "development-tools"]
 candle-core = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 half = { workspace = true }
 
 # CubeCL for GPU kernel support
@@ -24,6 +25,7 @@ cubecl-cuda = { workspace = true, optional = true }
 
 [dev-dependencies]
 criterion = { workspace = true }
+tokio = { workspace = true }
 
 [features]
 default = []
@@ -31,3 +33,19 @@ cuda = ["candle-core/cuda", "dep:cubecl", "dep:cubecl-cuda"]
 
 [lints]
 workspace = true
+
+[[example]]
+name = "device_selection"
+path = "examples/device_selection.rs"
+
+[[example]]
+name = "memory_tracking"
+path = "examples/memory_tracking.rs"
+
+[[example]]
+name = "error_handling"
+path = "examples/error_handling.rs"
+
+[[bench]]
+name = "core_ops"
+harness = false

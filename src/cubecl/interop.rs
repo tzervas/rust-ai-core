@@ -27,7 +27,11 @@ pub struct TensorBuffer {
 impl TensorBuffer {
     /// Create a new tensor buffer.
     pub fn new(bytes: Vec<u8>, shape: Vec<usize>, dtype: DType) -> Self {
-        Self { bytes, shape, dtype }
+        Self {
+            bytes,
+            shape,
+            dtype,
+        }
     }
 
     /// Get the total number of elements.

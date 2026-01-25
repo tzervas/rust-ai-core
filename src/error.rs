@@ -206,7 +206,10 @@ mod tests {
     #[test]
     fn test_error_display() {
         let err = CoreError::invalid_config("rank must be positive");
-        assert_eq!(err.to_string(), "invalid configuration: rank must be positive");
+        assert_eq!(
+            err.to_string(),
+            "invalid configuration: rank must be positive"
+        );
 
         let err = CoreError::shape_mismatch(vec![2, 3], vec![3, 2]);
         assert!(err.to_string().contains("shape mismatch"));
