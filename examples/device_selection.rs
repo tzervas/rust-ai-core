@@ -4,9 +4,11 @@
 //! with CUDA-first philosophy and environment variable configuration.
 //!
 //! Run with:
-//!   cargo run --example device_selection
-//!   RUST_AI_FORCE_CPU=1 cargo run --example device_selection
-//!   RUST_AI_CUDA_DEVICE=1 cargo run --example device_selection
+//! ```bash
+//! cargo run --example device_selection
+//! RUST_AI_FORCE_CPU=1 cargo run --example device_selection
+//! RUST_AI_CUDA_DEVICE=1 cargo run --example device_selection
+//! ```
 
 use rust_ai_core::{get_device, warn_if_cpu, DeviceConfig, Result};
 

@@ -18,7 +18,7 @@ fn bench_device_selection(c: &mut Criterion) {
         b.iter(|| {
             let config = DeviceConfig::default();
             black_box(config)
-        })
+        });
     });
 
     // From environment (involves env var lookups)
@@ -26,7 +26,7 @@ fn bench_device_selection(c: &mut Criterion) {
         b.iter(|| {
             let config = DeviceConfig::from_env();
             black_box(config)
-        })
+        });
     });
 
     // Builder pattern
@@ -37,7 +37,7 @@ fn bench_device_selection(c: &mut Criterion) {
                 .with_force_cpu(false)
                 .with_crate_name("bench");
             black_box(config)
-        })
+        });
     });
 
     // Full get_device call (forced CPU for consistency)
@@ -46,7 +46,7 @@ fn bench_device_selection(c: &mut Criterion) {
         b.iter(|| {
             let device = get_device(black_box(&config)).unwrap();
             black_box(device)
-        })
+        });
     });
 
     group.finish();
@@ -80,7 +80,7 @@ fn bench_memory_estimation(c: &mut Criterion) {
                         black_box(128), // head_dim
                         DType::BF16,
                     ))
-                })
+                });
             },
         );
     }
@@ -98,52 +98,52 @@ fn bench_memory_tracker(c: &mut Criterion) {
         b.iter(|| {
             tracker.allocate(black_box(1_000_000)).unwrap();
             tracker.deallocate(black_box(1_000_000));
-        })
+        });
     });
 
     // would_fit check (used for preflight checks)
     group.bench_function("would_fit", |b| {
         let tracker = MemoryTracker::with_limit(1_000_000_000);
         tracker.allocate(500_000_000).unwrap();
-        b.iter(|| black_box(tracker.would_fit(black_box(400_000_000))))
+        b.iter(|| black_box(tracker.would_fit(black_box(400_000_000))));
     });
 
     // Estimate with overhead
     group.bench_function("estimate_with_overhead", |b| {
         let tracker = MemoryTracker::new();
         let shape = [32, 64, 128];
-        b.iter(|| black_box(tracker.estimate_with_overhead(black_box(&shape), DType::F32)))
+        b.iter(|| black_box(tracker.estimate_with_overhead(black_box(&shape), DType::F32)));
     });
 
     group.finish();
 }
 
-/// Benchmark DType operations.
+/// Benchmark `DType` operations.
 fn bench_dtype_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("dtype_ops");
 
     // is_half_precision (used for mixed precision checks)
     group.bench_function("is_half_precision", |b| {
         let dtype = DType::BF16;
-        b.iter(|| black_box(dtype.is_half_precision()))
+        b.iter(|| black_box(dtype.is_half_precision()));
     });
 
     // is_training_dtype
     group.bench_function("is_training_dtype", |b| {
         let dtype = DType::F32;
-        b.iter(|| black_box(dtype.is_training_dtype()))
+        b.iter(|| black_box(dtype.is_training_dtype()));
     });
 
     // accumulator_dtype
     group.bench_function("accumulator_dtype", |b| {
         let dtype = DType::BF16;
-        b.iter(|| black_box(dtype.accumulator_dtype()))
+        b.iter(|| black_box(dtype.accumulator_dtype()));
     });
 
     // name (string lookup)
     group.bench_function("name", |b| {
         let dtype = DType::F32;
-        b.iter(|| black_box(dtype.name()))
+        b.iter(|| black_box(dtype.name()));
     });
 
     group.finish();

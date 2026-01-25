@@ -4,7 +4,11 @@
 //! tensor operations to prevent out-of-memory errors.
 //!
 //! Run with:
-//!   cargo run --example memory_tracking
+//! ```bash
+//! cargo run --example memory_tracking
+//! ```
+
+#![allow(clippy::cast_precision_loss)]
 
 use candle_core::{DType, Device, Tensor};
 use rust_ai_core::{

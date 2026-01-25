@@ -4,11 +4,15 @@
 //! using rust-ai-core's unified error types.
 //!
 //! Run with:
-//!   cargo run --example error_handling
+//! ```bash
+//! cargo run --example error_handling
+//! ```
+
+#![allow(clippy::items_after_statements)]
 
 use rust_ai_core::{CoreError, Result, ValidatableConfig};
 
-/// Example configuration struct for a LoRA adapter.
+/// Example configuration struct for a `LoRA` adapter.
 #[derive(Clone)]
 struct LoraConfig {
     rank: usize,
@@ -37,7 +41,7 @@ impl ValidatableConfig for LoraConfig {
     }
 }
 
-/// Example of a domain-specific error that wraps CoreError.
+/// Example of a domain-specific error that wraps `CoreError`.
 #[derive(Debug, thiserror::Error)]
 #[allow(dead_code)] // Some variants only shown for documentation
 enum AdapterError {
@@ -51,7 +55,7 @@ enum AdapterError {
     Core(#[from] CoreError),
 }
 
-fn create_adapter(config: LoraConfig) -> std::result::Result<(), AdapterError> {
+fn create_adapter(config: &LoraConfig) -> std::result::Result<(), AdapterError> {
     // Validate configuration
     config.validate()?; // CoreError auto-converts to AdapterError
 
@@ -85,7 +89,7 @@ fn main() {
         alpha: 32.0,
         dropout: 0.1,
     };
-    match create_adapter(valid_config) {
+    match create_adapter(&valid_config) {
         Ok(()) => println!("   Success!\n"),
         Err(e) => println!("   Error: {e}\n"),
     }
@@ -97,7 +101,7 @@ fn main() {
         alpha: 32.0,
         dropout: 0.1,
     };
-    match create_adapter(invalid_rank) {
+    match create_adapter(&invalid_rank) {
         Ok(()) => println!("   Success!\n"),
         Err(e) => println!("   Error: {e}\n"),
     }
@@ -109,7 +113,7 @@ fn main() {
         alpha: -1.0,
         dropout: 0.1,
     };
-    match create_adapter(invalid_alpha) {
+    match create_adapter(&invalid_alpha) {
         Ok(()) => println!("   Success!\n"),
         Err(e) => println!("   Error: {e}\n"),
     }
