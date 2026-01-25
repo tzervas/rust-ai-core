@@ -13,26 +13,30 @@ keywords = ["machine-learning", "cuda", "gpu", "tensors", "deep-learning"]
 categories = ["science", "mathematics", "development-tools"]
 
 [dependencies]
-candle-core = { workspace = true }
-thiserror = { workspace = true }
-tracing = { workspace = true }
+candle-core = { version = "0.9.2", default-features = false }
+thiserror = "2.0"
+tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-half = { workspace = true }
+half = "2.7"
 
 # CubeCL for GPU kernel support
-cubecl = { workspace = true, optional = true }
-cubecl-cuda = { workspace = true, optional = true }
+cubecl = { version = "0.9", optional = true }
+cubecl-cuda = { version = "0.9", optional = true }
 
 [dev-dependencies]
-criterion = { workspace = true }
-tokio = { workspace = true }
+criterion = "0.8"
+tokio = { version = "1.49", features = ["full"] }
 
 [features]
 default = []
 cuda = ["candle-core/cuda", "dep:cubecl", "dep:cubecl-cuda"]
 
-[lints]
-workspace = true
+[lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+pedantic = "warn"
 
 [[example]]
 name = "device_selection"
