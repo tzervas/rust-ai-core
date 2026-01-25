@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "rust-ai-core-bindings"
-version = "0.2.3"
+version = "0.2.4"
 description = "Python bindings for rust-ai-core: memory estimation, device detection, and ML utilities"
 readme = "README.md"
 license = { text = "MIT" }

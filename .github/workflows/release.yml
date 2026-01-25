@@ -86,10 +86,25 @@ jobs:
         run: cargo doc --no-deps
 
   # =============================================================================
-  # PUBLISH TO CRATES.IO (SKIPPED - handled locally)
+  # PUBLISH TO CRATES.IO
   # =============================================================================
-  # Note: crates.io publishing is done locally with `cargo publish`
-  # The CRATES_IO_TOKEN is configured on the developer machine
+  publish-crates:
+    name: Publish to crates.io
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download prepared source
+        uses: actions/download-artifact@v4
+        with:
+          name: prepared-source
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+        run: cargo publish --no-verify
 
   # =============================================================================
   # BUILD PYTHON WHEELS
@@ -237,6 +252,7 @@ jobs:
   github-release:
     name: Create GitHub Release
     needs:
+      - publish-crates
       - publish-pypi
     runs-on: ubuntu-latest
     steps:
