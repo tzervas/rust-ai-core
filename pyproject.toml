@@ -1,0 +1,55 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "rust-ai-core-bindings"
+version = "0.2.0"
+description = "Python bindings for rust-ai-core: memory estimation, device detection, and ML utilities"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Tyler Zervas", email = "tz-dev@vectorweight.com" }
+]
+requires-python = ">=3.9"
+keywords = ["machine-learning", "cuda", "gpu", "tensors", "deep-learning", "memory-estimation"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "numpy>=1.20",
+]
+
+[project.urls]
+Homepage = "https://github.com/tzervas/rust-ai-core"
+Repository = "https://github.com/tzervas/rust-ai-core"
+Documentation = "https://docs.rs/rust-ai-core"
+Issues = "https://github.com/tzervas/rust-ai-core/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-benchmark>=4.0",
+]
+
+[tool.maturin]
+# Build with python feature enabled
+features = ["python"]
+# Python module name must match the #[pymodule] name
+module-name = "rust_ai_core_bindings"
+# Build a universal wheel for Python
+python-source = "python"
+# Strip binaries for smaller wheel size
+strip = true

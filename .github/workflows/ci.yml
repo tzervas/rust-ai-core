@@ -1,0 +1,177 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check --all-features
+
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --all-targets -- -D warnings
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --all-features
+
+  doc:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo doc --no-deps --all-features
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  bench:
+    name: Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo bench --no-run
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rustsec/audit-check@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  msrv:
+    name: Minimum Rust Version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.92.0
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check
+
+  python-test:
+    name: Python (${{ matrix.python }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.9", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install maturin
+        run: pip install maturin
+
+      - name: Build Python wheel
+        run: maturin build --features python
+
+      - name: Install wheel (Unix)
+        if: runner.os != 'Windows'
+        run: pip install target/wheels/*.whl
+
+      - name: Install wheel (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $wheel = Get-ChildItem -Path target/wheels -Filter *.whl | Select-Object -First 1
+          pip install $wheel.FullName
+
+      - name: Test import
+        run: python -c "import rust_ai_core_bindings; print(f'Version: {rust_ai_core_bindings.version()}')"
+
+      - name: Run Python tests
+        run: |
+          python -c "
+          from rust_ai_core_bindings import (
+              estimate_tensor_bytes,
+              estimate_attention_memory,
+              create_memory_tracker,
+              tracker_would_fit,
+              tracker_allocate,
+              tracker_allocated_bytes,
+              cuda_available,
+              bytes_per_dtype,
+              supported_dtypes,
+          )
+
+          # Test tensor estimation
+          bytes_needed = estimate_tensor_bytes([1, 512, 4096], 'f32')
+          assert bytes_needed == 1 * 512 * 4096 * 4, f'Expected {1*512*4096*4}, got {bytes_needed}'
+          print(f'estimate_tensor_bytes: OK ({bytes_needed} bytes)')
+
+          # Test attention estimation
+          attn_bytes = estimate_attention_memory(1, 32, 512, 128, 'bf16')
+          assert attn_bytes > 0, 'Attention bytes should be positive'
+          print(f'estimate_attention_memory: OK ({attn_bytes} bytes)')
+
+          # Test memory tracker
+          tracker = create_memory_tracker(limit_gb=1.0)
+          assert tracker_would_fit(tracker, 1024), 'Should fit 1KB in 1GB'
+          tracker_allocate(tracker, 1024)
+          assert tracker_allocated_bytes(tracker) == 1024, 'Should have 1KB allocated'
+          print('memory tracker: OK')
+
+          # Test CUDA check (should not fail)
+          cuda = cuda_available()
+          print(f'cuda_available: OK (cuda={cuda})')
+
+          # Test dtype utilities
+          assert bytes_per_dtype('f32') == 4, 'f32 should be 4 bytes'
+          assert bytes_per_dtype('bf16') == 2, 'bf16 should be 2 bytes'
+          print('bytes_per_dtype: OK')
+
+          # Test supported dtypes
+          dtypes = supported_dtypes()
+          assert 'f32' in dtypes, 'f32 should be supported'
+          assert 'bf16' in dtypes, 'bf16 should be supported'
+          print(f'supported_dtypes: OK ({len(dtypes)} types)')
+
+          print('All Python tests passed!')
+          "
