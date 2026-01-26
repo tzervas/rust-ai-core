@@ -17,10 +17,11 @@
 #![allow(clippy::useless_conversion)] // PyO3 macro generates these
 #![allow(clippy::missing_errors_doc)] // Python bindings - errors are documented in docstrings
 #![allow(clippy::needless_pass_by_value)] // PyO3 requires owned types for Python arguments
-#![allow(deprecated)] // PyO3 0.24 deprecates into_py, will migrate to IntoPyObject in future
 
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
+use pyo3::types::PyAny;
+use pyo3::IntoPyObject;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -174,10 +175,21 @@ fn cuda_available() -> bool {
 }
 
 /// Get device information.
+///
+/// Returns a dictionary with device type, ordinal, and name.
+///
+/// # Why return `PyResult<HashMap<String, Py<PyAny>>>`?
+/// - `HashMap` maps naturally to Python dict for interop
+/// - `Py<PyAny>` allows heterogeneous value types (str, int, None)
+/// - `PyResult` enables proper Python exception propagation
+///
+/// # Why `Python::attach`?
+/// - `PyO3` 0.27 deprecates `with_gil` in favor of `attach`
+/// - `attach` provides clearer semantics for GIL acquisition
 #[pyfunction]
 #[pyo3(signature = (force_cpu=false, cuda_device=0))]
-fn get_device_info(force_cpu: bool, cuda_device: usize) -> PyResult<HashMap<String, PyObject>> {
-    Python::with_gil(|py| {
+fn get_device_info(force_cpu: bool, cuda_device: usize) -> PyResult<HashMap<String, Py<PyAny>>> {
+    Python::attach(|py| {
         let config = DeviceConfig::new()
             .with_force_cpu(force_cpu)
             .with_cuda_device(cuda_device);
@@ -185,26 +197,44 @@ fn get_device_info(force_cpu: bool, cuda_device: usize) -> PyResult<HashMap<Stri
         let device = rust_get_device(&config)
             .map_err(|e| PyRuntimeError::new_err(format!("Device error: {e}")))?;
 
-        let mut result: HashMap<String, PyObject> = HashMap::new();
+        let mut result: HashMap<String, Py<PyAny>> = HashMap::new();
+
+        // Helper to convert values to Py<PyAny> using PyO3 0.27's IntoPyObject trait
+        // Why this pattern?
+        // - into_pyobject() returns Bound<'py, T> for the specific Python type
+        // - into_any() converts to Bound<'py, PyAny> (type erasure)
+        // - unbind() converts to Py<PyAny> removing the lifetime parameter
+        let to_py = |value: &str| -> PyResult<Py<PyAny>> {
+            Ok(value.into_pyobject(py)?.into_any().unbind())
+        };
 
         match device {
             candle_core::Device::Cuda(_cuda_dev) => {
-                result.insert("type".to_string(), "cuda".into_py(py));
-                result.insert("ordinal".to_string(), cuda_device.into_py(py));
+                result.insert("type".to_string(), to_py("cuda")?);
+                result.insert(
+                    "ordinal".to_string(),
+                    cuda_device.into_pyobject(py)?.into_any().unbind(),
+                );
                 result.insert(
                     "name".to_string(),
-                    format!("CUDA:{cuda_device}").into_py(py),
+                    format!("CUDA:{cuda_device}")
+                        .into_pyobject(py)?
+                        .into_any()
+                        .unbind(),
                 );
             }
             candle_core::Device::Cpu => {
-                result.insert("type".to_string(), "cpu".into_py(py));
-                result.insert("ordinal".to_string(), py.None());
-                result.insert("name".to_string(), "CPU".into_py(py));
+                result.insert("type".to_string(), to_py("cpu")?);
+                result.insert("ordinal".to_string(), py.None().into_pyobject(py)?.unbind());
+                result.insert("name".to_string(), to_py("CPU")?);
             }
             candle_core::Device::Metal(_metal_dev) => {
-                result.insert("type".to_string(), "metal".into_py(py));
-                result.insert("ordinal".to_string(), 0_usize.into_py(py));
-                result.insert("name".to_string(), "Metal:0".into_py(py));
+                result.insert("type".to_string(), to_py("metal")?);
+                result.insert(
+                    "ordinal".to_string(),
+                    0_usize.into_pyobject(py)?.into_any().unbind(),
+                );
+                result.insert("name".to_string(), to_py("Metal:0")?);
             }
         }
 

@@ -110,6 +110,27 @@ jobs:
   # =============================================================================
   # BUILD PYTHON WHEELS
   # =============================================================================
+  #
+  # Why these Python versions?
+  # - 3.9: Minimum supported (matches pyproject.toml requires-python = ">=3.9")
+  # - 3.10-3.12: Active Python versions with full ecosystem support
+  # - 3.13: Latest stable release (Oct 2024), PyO3 0.27 fully supports it
+  # - 3.14: Future release (Oct 2025), PyO3 0.27 supports it for early adopters
+  #
+  # Why explicit interpreter list instead of --find-interpreter?
+  # - Avoids picking up unsupported Python versions on CI runners
+  # - Ensures consistent, reproducible builds across all platforms
+  # - Prevents failures when CI runners update their Python installations
+  #
+  # Why manylinux: auto?
+  # - Automatically selects appropriate manylinux tag based on dependencies
+  # - Ensures maximum compatibility with user systems
+  #
+  # Why sccache?
+  # - Dramatically speeds up repeated builds by caching compilation artifacts
+  # - Reduces CI costs and developer wait times
+  # =============================================================================
+
   build-wheels-linux:
     name: Build wheels (Linux ${{ matrix.target }})
     needs: test
@@ -125,13 +146,14 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist -i python3.9 -i python3.10 -i python3.11 -i python3.12
+          # Build for Python 3.9-3.14 to maximize user compatibility
+          args: --release --out dist -i python3.9 -i python3.10 -i python3.11 -i python3.12 -i python3.13 -i python3.14
           sccache: 'true'
           manylinux: auto
 
@@ -156,13 +178,14 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}-apple-darwin
-          args: --release --out dist -i python3.9 -i python3.10 -i python3.11 -i python3.12
+          # Build for Python 3.9-3.14 to maximize user compatibility
+          args: --release --out dist -i python3.9 -i python3.10 -i python3.11 -i python3.12 -i python3.13 -i python3.14
           sccache: 'true'
 
       - name: Upload wheels
@@ -183,13 +206,14 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: x86_64-pc-windows-msvc
-          args: --release --out dist -i python3.9 -i python3.10 -i python3.11 -i python3.12
+          # Build for Python 3.9-3.14 to maximize user compatibility
+          args: --release --out dist -i python3.9 -i python3.10 -i python3.11 -i python3.12 -i python3.13 -i python3.14
           sccache: 'true'
 
       - name: Upload wheels

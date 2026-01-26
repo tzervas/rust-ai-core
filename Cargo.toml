@@ -1,8 +1,16 @@
+# =============================================================================
+# PACKAGE METADATA
+# =============================================================================
 [package]
 name = "rust-ai-core"
-version = "0.2.6"
+version = "0.2.7"
 edition = "2021"
+
+# Why Rust 1.92?
+# - Required for latest language features used by dependencies
+# - Ensures users have access to stable async traits and const generics
 rust-version = "1.92"
+
 license = "MIT"
 authors = ["Tyler Zervas <tz-dev@vectorweight.com>"]
 description = "Shared core utilities for the rust-ai ecosystem: device selection, errors, traits, and CubeCL interop"
@@ -12,41 +20,159 @@ documentation = "https://docs.rs/rust-ai-core"
 keywords = ["machine-learning", "cuda", "gpu", "tensors", "deep-learning"]
 categories = ["science", "mathematics", "development-tools"]
 
+# =============================================================================
+# LIBRARY CONFIGURATION
+# =============================================================================
 [lib]
+# Why both rlib and cdylib?
+# - rlib: Standard Rust library format for Rust consumers
+# - cdylib: Required for Python extension modules (PyO3)
 crate-type = ["rlib", "cdylib"]
 name = "rust_ai_core"
 
+# =============================================================================
+# DEPENDENCIES
+# =============================================================================
 [dependencies]
-candle-core = { version = "0.9.2", default-features = false }
+# Candle: Minimalist ML framework by Hugging Face
+# Why candle-core?
+# - Provides Tensor type and Device abstraction we build upon
+# - Lightweight compared to full PyTorch bindings
+# - Native Rust, no Python runtime required
+# Why default-features = false?
+# - Avoids pulling in CUDA by default (user opts in via features)
+# - Keeps compilation fast for CPU-only users
+candle-core = { version = "0.9", default-features = false }
+
+# Error handling
+# Why thiserror?
+# - Derive macro for std::error::Error trait
+# - Zero runtime cost, compile-time code generation
+# - Industry standard for Rust error types
 thiserror = "2.0"
+
+# Logging/Tracing
+# Why tracing (not log)?
+# - Structured logging with spans for async context
+# - Better performance characteristics
+# - Widely adopted in async Rust ecosystem
 tracing = "0.1"
+
+# Why tracing-subscriber?
+# - Provides formatters and filters for tracing output
+# - env-filter feature enables RUST_LOG environment variable
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Half-precision floats
+# Why half?
+# - Provides f16 and bf16 types for mixed-precision training
+# - Required for memory-efficient model loading
+# - Used by candle for half-precision tensor support
 half = "2.7"
 
-# CubeCL for GPU kernel support
+# =============================================================================
+# OPTIONAL DEPENDENCIES - GPU SUPPORT
+# =============================================================================
+# CubeCL: GPU kernel compilation framework
+# Why CubeCL?
+# - Write GPU kernels in Rust, compile to CUDA/Metal/Vulkan
+# - Enables custom CUDA kernels without writing raw CUDA C
+# - Provides higher-level abstractions than raw CUDA bindings
 cubecl = { version = "0.9", optional = true }
 cubecl-cuda = { version = "0.9", optional = true }
 
-# Python bindings (optional)
-pyo3 = { version = "0.24", features = ["extension-module", "generate-import-lib"], optional = true }
-numpy = { version = "0.24", optional = true }
+# =============================================================================
+# OPTIONAL DEPENDENCIES - PYTHON BINDINGS
+# =============================================================================
+# PyO3: Rust bindings for Python
+# Why PyO3?
+# - Industry standard for Rust-Python interop
+# - Zero-copy data sharing with numpy arrays
+# - Supports Python 3.9-3.14
+#
+# Why version 0.27?
+# - 0.27 is first version with official Python 3.14 support
+# - 0.24 only supports up to Python 3.13
+# - See: https://github.com/PyO3/pyo3/pull/4811
+#
+# Why these features?
+# - extension-module: Required for building Python extension modules
+# - generate-import-lib: Required for Windows cross-compilation without Python installed
+pyo3 = { version = "0.27", features = ["extension-module", "generate-import-lib"], optional = true }
 
+# NumPy bindings for PyO3
+# Why numpy crate?
+# - Provides zero-copy ndarray interop between Rust and Python
+# - Version must match PyO3 version for compatibility
+numpy = { version = "0.27", optional = true }
+
+# =============================================================================
+# DEV DEPENDENCIES
+# =============================================================================
 [dev-dependencies]
+# Criterion: Statistics-driven benchmarking
+# Why criterion?
+# - Provides statistically rigorous benchmarks
+# - Automatic detection of performance regressions
+# - HTML reports with graphs
 criterion = "0.8"
+
+# Tokio: Async runtime
+# Why tokio in dev-dependencies?
+# - Required for async tests
+# - "full" feature enables all tokio components for testing flexibility
 tokio = { version = "1.49", features = ["full"] }
 
+# =============================================================================
+# FEATURES
+# =============================================================================
 [features]
+# Why empty default?
+# - Users explicitly opt-in to CUDA or Python
+# - Keeps base compilation fast and dependency-light
+# - CPU-only users don't need CUDA toolchain
 default = []
+
+# CUDA support
+# Why this feature?
+# - Enables CUDA acceleration for tensor operations
+# - Pulls in CubeCL for custom kernel support
+# - Requires NVIDIA GPU and CUDA toolkit
 cuda = ["candle-core/cuda", "dep:cubecl", "dep:cubecl-cuda"]
+
+# Python bindings
+# Why this feature?
+# - Enables Python extension module compilation
+# - Only needed when building rust-ai-core-bindings package
+# - Rust-only users skip Python toolchain requirement
 python = ["dep:pyo3", "dep:numpy"]
 
+# =============================================================================
+# LINTS
+# =============================================================================
 [lints.rust]
+# Why deny unsafe_code?
+# - Forces safe Rust throughout the codebase
+# - Prevents subtle memory safety bugs
+# - PyO3 handles all necessary unsafe internally
 unsafe_code = "deny"
+
+# Why warn missing_docs?
+# - Encourages documentation of public API
+# - Undocumented code is incomplete code
+# - Helps maintainability and onboarding
 missing_docs = "warn"
 
 [lints.clippy]
+# Why pedantic?
+# - Catches subtle bugs and anti-patterns
+# - Enforces idiomatic Rust style
+# - Some lints are allowed in specific modules where appropriate
 pedantic = "warn"
 
+# =============================================================================
+# EXAMPLES
+# =============================================================================
 [[example]]
 name = "device_selection"
 path = "examples/device_selection.rs"
@@ -59,6 +185,12 @@ path = "examples/memory_tracking.rs"
 name = "error_handling"
 path = "examples/error_handling.rs"
 
+# =============================================================================
+# BENCHMARKS
+# =============================================================================
 [[bench]]
 name = "core_ops"
+# Why harness = false?
+# - Criterion provides its own test harness
+# - Prevents conflict with built-in benchmark harness
 harness = false

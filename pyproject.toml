@@ -1,18 +1,39 @@
+# =============================================================================
+# BUILD SYSTEM
+# =============================================================================
+# Why maturin?
+# - Maturin is the standard tool for building Python extensions from Rust
+# - It handles the complex cross-platform compilation and wheel building
+# - Version 1.7+ required for latest PyO3 features and Python 3.14 support
 [build-system]
 requires = ["maturin>=1.7,<2.0"]
 build-backend = "maturin"
 
+# =============================================================================
+# PROJECT METADATA
+# =============================================================================
 [project]
 name = "rust-ai-core-bindings"
-version = "0.2.6"
+version = "0.2.7"
 description = "Python bindings for rust-ai-core: memory estimation, device detection, and ML utilities"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [
     { name = "Tyler Zervas", email = "tz-dev@vectorweight.com" }
 ]
+
+# Why Python 3.9 minimum?
+# - 3.9 is the oldest Python version still receiving security updates (until Oct 2025)
+# - Provides good balance between compatibility and modern language features
+# - NumPy 2.0+ requires Python 3.9+
 requires-python = ">=3.9"
+
 keywords = ["machine-learning", "cuda", "gpu", "tensors", "deep-learning", "memory-estimation"]
+
+# Why these classifiers?
+# - Explicitly list supported Python versions so users know compatibility
+# - Programming Language :: Rust indicates this is a Rust extension (helps discovery)
+# - Topic classifiers help users find this package when searching
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -24,10 +45,17 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Rust",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+
+# Why numpy>=1.20?
+# - 1.20 is minimum for consistent ndarray interop with PyO3/numpy crate
+# - Most ML users will have a recent numpy anyway
+# - We don't pin to numpy 2.0 to allow users on older environments
 dependencies = [
     "numpy>=1.20",
 ]
@@ -44,8 +72,27 @@ dev = [
     "pytest-benchmark>=4.0",
 ]
 
+# =============================================================================
+# MATURIN CONFIGURATION
+# =============================================================================
 [tool.maturin]
+# Why "python" feature?
+# - Enables PyO3 bindings compilation (feature-gated to keep core crate lean)
+# - Users of the Rust crate don't need Python dependencies
 features = ["python"]
+
+# Why this module name?
+# - Matches the import name: `import rust_ai_core_bindings`
+# - Follows Python naming conventions (snake_case)
 module-name = "rust_ai_core_bindings"
+
+# Why python-source = "python"?
+# - Tells maturin where to find Python stub files (.pyi) and __init__.py
+# - Enables proper IDE autocompletion and type checking
 python-source = "python"
+
+# Why strip = true?
+# - Removes debug symbols from release builds
+# - Significantly reduces wheel size (often 50%+ smaller)
+# - Users don't need debug symbols for production use
 strip = true
