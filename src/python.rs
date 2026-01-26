@@ -17,6 +17,7 @@
 #![allow(clippy::useless_conversion)] // PyO3 macro generates these
 #![allow(clippy::missing_errors_doc)] // Python bindings - errors are documented in docstrings
 #![allow(clippy::needless_pass_by_value)] // PyO3 requires owned types for Python arguments
+#![allow(deprecated)] // PyO3 0.24 deprecates into_py, will migrate to IntoPyObject in future
 
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;

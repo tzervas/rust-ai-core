@@ -1,6 +1,6 @@
 [package]
 name = "rust-ai-core"
-version = "0.2.5"
+version = "0.2.6"
 edition = "2021"
 rust-version = "1.92"
 license = "MIT"
@@ -28,8 +28,8 @@ cubecl = { version = "0.9", optional = true }
 cubecl-cuda = { version = "0.9", optional = true }
 
 # Python bindings (optional)
-pyo3 = { version = "0.22", features = ["extension-module", "generate-import-lib"], optional = true }
-numpy = { version = "0.22", optional = true }
+pyo3 = { version = "0.24", features = ["extension-module", "generate-import-lib"], optional = true }
+numpy = { version = "0.24", optional = true }
 
 [dev-dependencies]
 criterion = "0.8"

@@ -1,6 +1,6 @@
 # rust-ai-core
 
-[![Crates.io](https://img.shields.io/crates/v/rust-ai-core.svg)](https://crates.io/crates/rust-ai-core) [![Documentation](https://docs.rs/rust-ai-core/badge.svg)](https://docs.rs/rust-ai-core) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE-MIT)
+[![Crates.io](https://img.shields.io/crates/v/rust-ai-core.svg)](https://crates.io/crates/rust-ai-core) [![PyPI](https://img.shields.io/pypi/v/rust-ai-core-bindings.svg)](https://pypi.org/project/rust-ai-core-bindings/) [![Documentation](https://docs.rs/rust-ai-core/badge.svg)](https://docs.rs/rust-ai-core) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE-MIT)
 
 **Foundation layer for the rust-ai ecosystem**, providing unified abstractions for device selection, error handling, configuration validation, and CubeCL interop.
 
@@ -21,15 +21,27 @@ rust-ai-core is the shared foundation that enables a future AI framework built o
 
 ## Installation
 
+### Rust
+
 ```toml
 [dependencies]
-rust-ai-core = "0.1"
+rust-ai-core = "0.2"
 
 # With CUDA support
-rust-ai-core = { version = "0.1", features = ["cuda"] }
+rust-ai-core = { version = "0.2", features = ["cuda"] }
 ```
 
+### Python
+
+```bash
+pip install rust-ai-core-bindings
+```
+
+The Python package provides bindings for memory estimation, device detection, and dtype utilities.
+
 ## Quick Start
+
+### Rust
 
 ```rust
 use rust_ai_core::{get_device, DeviceConfig, CoreError, Result};
@@ -37,13 +49,45 @@ use rust_ai_core::{get_device, DeviceConfig, CoreError, Result};
 fn main() -> Result<()> {
     // Get CUDA device with automatic fallback + warning
     let device = get_device(&DeviceConfig::default())?;
-    
+
     // Or with environment-based configuration
     let config = DeviceConfig::from_env();
     let device = get_device(&config)?;
-    
+
     Ok(())
 }
+```
+
+### Python
+
+```python
+import rust_ai_core_bindings as rac
+
+# Memory estimation for AI training planning
+batch, heads, seq_len, head_dim = 1, 32, 4096, 128
+attention_bytes = rac.estimate_attention_memory(batch, heads, seq_len, head_dim, "bf16")
+print(f"Attention layer: {attention_bytes / 1024**2:.1f} MB")
+
+# Tensor memory estimation
+shape = [1, 512, 4096]
+tensor_bytes = rac.estimate_tensor_bytes(shape, "f32")
+print(f"Tensor: {tensor_bytes / 1024**2:.1f} MB")
+
+# Memory tracking for GPU budget management
+tracker = rac.create_memory_tracker(limit_bytes=8 * 1024**3)  # 8 GB limit
+rac.tracker_allocate(tracker, tensor_bytes)
+print(f"Current: {rac.tracker_allocated_bytes(tracker)} bytes")
+print(f"Peak: {rac.tracker_peak_bytes(tracker)} bytes")
+
+# Device detection
+if rac.cuda_available():
+    device_info = rac.get_device_info()
+    print(f"Device: {device_info['name']}")
+
+# Data type utilities
+print(f"f32 size: {rac.bytes_per_dtype('f32')} bytes")
+print(f"bf16 is float: {rac.is_floating_point_dtype('bf16')}")
+print(f"bf16 accumulator: {rac.accumulator_dtype('bf16')}")
 ```
 
 ## Environment Variables
@@ -260,6 +304,87 @@ rust-ai-core is designed to enable a future AI framework with these principles:
 6. **Customization depth** - Users can go as deep as they want, from high-level APIs to custom kernels
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for design decisions and extension points.
+
+## Python API Reference
+
+The `rust-ai-core-bindings` package exposes the following functions:
+
+### Memory Estimation
+
+```python
+# Estimate tensor memory
+estimate_tensor_bytes(shape: list[int], dtype: str) -> int
+
+# Estimate attention layer memory (Q, K, V + attention weights + output)
+estimate_attention_memory(
+    batch_size: int,
+    num_heads: int,
+    seq_len: int,
+    head_dim: int,
+    dtype: str
+) -> int
+```
+
+### Memory Tracking
+
+```python
+# Create a memory tracker with optional limit
+create_memory_tracker(limit_bytes: int = 0) -> MemoryTracker
+
+# Record allocation (raises if exceeds limit)
+tracker_allocate(tracker: MemoryTracker, bytes: int)
+
+# Record deallocation
+tracker_deallocate(tracker: MemoryTracker, bytes: int)
+
+# Query tracker state
+tracker_allocated_bytes(tracker: MemoryTracker) -> int
+tracker_peak_bytes(tracker: MemoryTracker) -> int
+tracker_would_fit(tracker: MemoryTracker, bytes: int) -> bool
+
+# Reset tracker to initial state
+tracker_reset(tracker: MemoryTracker)
+```
+
+### Device Detection
+
+```python
+# Check CUDA availability
+cuda_available() -> bool
+
+# Get device information (returns dict with type, ordinal, name)
+get_device_info(force_cpu: bool = False, cuda_device: int = 0) -> dict
+```
+
+### Data Type Utilities
+
+```python
+# Get bytes per element for dtype
+bytes_per_dtype(dtype: str) -> int
+
+# Check if dtype is floating point
+is_floating_point_dtype(dtype: str) -> bool
+
+# Get accumulator dtype for mixed precision
+accumulator_dtype(dtype: str) -> str
+```
+
+### Supported Data Types
+
+- `"f32"` - 32-bit float
+- `"f16"` - 16-bit float
+- `"bf16"` - Brain float 16
+- `"f64"` - 64-bit float
+- `"i64"` - 64-bit integer
+- `"u32"` - 32-bit unsigned integer
+- `"u8"` - 8-bit unsigned integer
+
+### Logging
+
+```python
+# Initialize logging (call once at startup)
+init_logging(level: str = "info")  # debug, info, warn, error
+```
 
 ## License
 
