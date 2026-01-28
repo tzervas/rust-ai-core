@@ -3,7 +3,7 @@
 # =============================================================================
 [package]
 name = "rust-ai-core"
-version = "0.2.7"
+version = "0.3.0"
 edition = "2021"
 
 # Why Rust 1.92?
@@ -13,11 +13,11 @@ rust-version = "1.92"
 
 license = "MIT"
 authors = ["Tyler Zervas <tz-dev@vectorweight.com>"]
-description = "Shared core utilities for the rust-ai ecosystem: device selection, errors, traits, and CubeCL interop"
+description = "Unified AI engineering toolkit: orchestrates peft-rs, qlora-rs, unsloth-rs, axolotl-rs, bitnet-quantize, trit-vsa, vsa-optim-rs, and tritter-accel"
 repository = "https://github.com/tzervas/rust-ai-core"
 homepage = "https://github.com/tzervas/rust-ai-core"
 documentation = "https://docs.rs/rust-ai-core"
-keywords = ["machine-learning", "cuda", "gpu", "tensors", "deep-learning"]
+keywords = ["machine-learning", "cuda", "gpu", "fine-tuning", "quantization"]
 categories = ["science", "mathematics", "development-tools"]
 
 # =============================================================================
@@ -31,7 +31,7 @@ crate-type = ["rlib", "cdylib"]
 name = "rust_ai_core"
 
 # =============================================================================
-# DEPENDENCIES
+# CORE DEPENDENCIES
 # =============================================================================
 [dependencies]
 # Candle: Minimalist ML framework by Hugging Face
@@ -71,6 +71,60 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 half = "2.7"
 
 # =============================================================================
+# RUST-AI ECOSYSTEM CRATES (REQUIRED)
+# =============================================================================
+# These crates form the rust-ai ecosystem. rust-ai-core orchestrates them
+# into a unified API for AI engineering and development.
+
+# PEFT (Parameter-Efficient Fine-Tuning) adapters
+# Why peft-rs?
+# - LoRA, DoRA, AdaLoRA, and other adapter implementations
+# - Foundation for efficient fine-tuning without full model retraining
+peft-rs = "1.0"
+
+# QLoRA (Quantized LoRA) for memory-efficient fine-tuning
+# Why qlora-rs?
+# - 4-bit quantization with LoRA for massive memory savings
+# - Enables fine-tuning large models on consumer GPUs
+qlora-rs = "1.0"
+
+# Unsloth-style optimized transformer blocks
+# Why unsloth-rs?
+# - GPU-optimized attention and feedforward implementations
+# - Significant speedups for inference and training
+unsloth-rs = "1.0"
+
+# Axolotl-style configurable fine-tuning orchestration
+# Why axolotl-rs?
+# - YAML-driven configuration for fine-tuning pipelines
+# - High-level orchestration of training workflows
+axolotl-rs = "1.1"
+
+# BitNet 1.58-bit quantization
+# Why bitnet-quantize?
+# - Microsoft BitNet b1.58 implementation
+# - Extreme compression with ternary weights (-1, 0, +1)
+bitnet-quantize = "0.1"
+
+# Ternary Vector Symbolic Architectures
+# Why trit-vsa?
+# - Balanced ternary arithmetic with bitsliced storage
+# - Foundation for VSA-based neural computations
+trit-vsa = "0.1"
+
+# VSA-based training optimization
+# Why vsa-optim-rs?
+# - Deterministic training with VSA compression
+# - Closed-form gradient prediction for faster convergence
+vsa-optim-rs = "0.1"
+
+# Ternary acceleration layer
+# Why tritter-accel?
+# - GPU-accelerated ternary operations
+# - Bridges BitNet, VSA, and ternary computations
+tritter-accel = "0.1"
+
+# =============================================================================
 # OPTIONAL DEPENDENCIES - GPU SUPPORT
 # =============================================================================
 # CubeCL: GPU kernel compilation framework
@@ -88,23 +142,22 @@ cubecl-cuda = { version = "0.9", optional = true }
 # Why PyO3?
 # - Industry standard for Rust-Python interop
 # - Zero-copy data sharing with numpy arrays
-# - Supports Python 3.9-3.14
+# - Supports Python 3.9-3.13
 #
-# Why version 0.27?
-# - 0.27 is first version with official Python 3.14 support
-# - 0.24 only supports up to Python 3.13
-# - See: https://github.com/PyO3/pyo3/pull/4811
+# Why version 0.22?
+# - Required for compatibility with tritter-accel which uses pyo3 0.22
+# - All ecosystem crates aligned on this version
 #
 # Why these features?
 # - extension-module: Required for building Python extension modules
 # - generate-import-lib: Required for Windows cross-compilation without Python installed
-pyo3 = { version = "0.27", features = ["extension-module", "generate-import-lib"], optional = true }
+pyo3 = { version = "0.22", features = ["extension-module", "generate-import-lib"], optional = true }
 
 # NumPy bindings for PyO3
 # Why numpy crate?
 # - Provides zero-copy ndarray interop between Rust and Python
 # - Version must match PyO3 version for compatibility
-numpy = { version = "0.27", optional = true }
+numpy = { version = "0.22", optional = true }
 
 # =============================================================================
 # DEV DEPENDENCIES
@@ -127,10 +180,8 @@ tokio = { version = "1.49", features = ["full"] }
 # FEATURES
 # =============================================================================
 [features]
-# Why empty default?
-# - Users explicitly opt-in to CUDA or Python
-# - Keeps base compilation fast and dependency-light
-# - CPU-only users don't need CUDA toolchain
+# Default includes all ecosystem crates (they're required dependencies)
+# Users can opt-in to CUDA and Python bindings
 default = []
 
 # CUDA support
@@ -146,6 +197,9 @@ cuda = ["candle-core/cuda", "dep:cubecl", "dep:cubecl-cuda"]
 # - Only needed when building rust-ai-core-bindings package
 # - Rust-only users skip Python toolchain requirement
 python = ["dep:pyo3", "dep:numpy"]
+
+# Full feature set (CUDA + Python)
+full = ["cuda", "python"]
 
 # =============================================================================
 # LINTS
@@ -194,3 +248,26 @@ name = "core_ops"
 # - Criterion provides its own test harness
 # - Prevents conflict with built-in benchmark harness
 harness = false
+
+# =============================================================================
+# KNOWN ISSUES - DEPENDENCY VERSION CONFLICTS
+# =============================================================================
+#
+# The following version conflicts exist between ecosystem crates:
+#
+# 1. SAFETENSORS CONFLICT:
+#    - candle-core 0.9.x uses safetensors 0.7.0
+#    - peft-rs 1.0.1 and axolotl-rs 1.1.1 use safetensors 0.4.5
+#    - This causes trait bounds errors (`View` trait mismatch)
+#
+# RESOLUTION: Update peft-rs and axolotl-rs to use safetensors 0.7.0
+#
+# The upstream crates (peft-rs, axolotl-rs) need to update their safetensors
+# dependency to match candle-core. This requires releases of:
+#   - peft-rs >= 1.0.2 with safetensors 0.7.0
+#   - axolotl-rs >= 1.1.2 with safetensors 0.7.0
+#
+# Until then, users can:
+#   1. Use git dependencies pointing to branches with the fix
+#   2. Use path dependencies for local development
+#   3. Wait for updated crate releases
