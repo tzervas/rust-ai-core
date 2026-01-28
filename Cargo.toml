@@ -250,24 +250,21 @@ name = "core_ops"
 harness = false
 
 # =============================================================================
-# KNOWN ISSUES - DEPENDENCY VERSION CONFLICTS
+# REQUIRED UPSTREAM FIXES
 # =============================================================================
 #
-# The following version conflicts exist between ecosystem crates:
+# SAFETENSORS VERSION CONFLICT:
+# candle-core 0.9.x requires safetensors 0.7.0, but peft-rs 1.0.1 and
+# axolotl-rs 1.1.1 use safetensors 0.4.5, causing trait bounds errors.
 #
-# 1. SAFETENSORS CONFLICT:
-#    - candle-core 0.9.x uses safetensors 0.7.0
-#    - peft-rs 1.0.1 and axolotl-rs 1.1.1 use safetensors 0.4.5
-#    - This causes trait bounds errors (`View` trait mismatch)
+# TO FIX: Update these crates and publish new versions to crates.io:
 #
-# RESOLUTION: Update peft-rs and axolotl-rs to use safetensors 0.7.0
+# 1. peft-rs (https://github.com/tzervas/peft-rs)
+#    Change: safetensors = "0.4" -> safetensors = "0.7"
+#    Publish: peft-rs 1.0.2+
 #
-# The upstream crates (peft-rs, axolotl-rs) need to update their safetensors
-# dependency to match candle-core. This requires releases of:
-#   - peft-rs >= 1.0.2 with safetensors 0.7.0
-#   - axolotl-rs >= 1.1.2 with safetensors 0.7.0
+# 2. axolotl-rs (https://github.com/tzervas/axolotl-rs)
+#    Change: safetensors = "0.4" -> safetensors = "0.7"
+#    Publish: axolotl-rs 1.1.2+
 #
-# Until then, users can:
-#   1. Use git dependencies pointing to branches with the fix
-#   2. Use path dependencies for local development
-#   3. Wait for updated crate releases
+# After publishing, update versions here and run `cargo update`.
