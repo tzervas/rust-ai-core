@@ -392,9 +392,9 @@ impl<'a> FinetuneBuilder<'a> {
     ///
     /// Returns error if model path is not specified.
     pub fn build(self) -> Result<FinetuneConfig> {
-        let model_path = self.model_path.ok_or_else(|| {
-            CoreError::invalid_config("model path is required for fine-tuning")
-        })?;
+        let model_path = self
+            .model_path
+            .ok_or_else(|| CoreError::invalid_config("model path is required for fine-tuning"))?;
 
         Ok(FinetuneConfig {
             model_path,
@@ -578,9 +578,9 @@ impl<'a> TrainBuilder<'a> {
     ///
     /// Returns error if config file is not specified.
     pub fn build(self) -> Result<TrainConfig> {
-        let config_path = self.config_path.ok_or_else(|| {
-            CoreError::invalid_config("config file path is required")
-        })?;
+        let config_path = self
+            .config_path
+            .ok_or_else(|| CoreError::invalid_config("config file path is required"))?;
 
         Ok(TrainConfig { config_path })
     }
@@ -643,7 +643,8 @@ mod tests {
         let config = RustAIConfig::new().with_cpu();
         let ai = RustAI::new(config).unwrap();
 
-        let finetune_config = ai.finetune()
+        let finetune_config = ai
+            .finetune()
             .model("test-model")
             .rank(32)
             .alpha(8.0)
@@ -660,7 +661,8 @@ mod tests {
         let config = RustAIConfig::new().with_cpu();
         let ai = RustAI::new(config).unwrap();
 
-        let quant_config = ai.quantize()
+        let quant_config = ai
+            .quantize()
             .method(QuantizeMethod::BitNet)
             .bits(2)
             .group_size(128)
@@ -676,9 +678,7 @@ mod tests {
         let config = RustAIConfig::new().with_cpu();
         let ai = RustAI::new(config).unwrap();
 
-        let vsa_config = ai.vsa()
-            .dimension(8192)
-            .build();
+        let vsa_config = ai.vsa().dimension(8192).build();
 
         assert_eq!(vsa_config.dimension, 8192);
     }
@@ -688,10 +688,7 @@ mod tests {
         let config = RustAIConfig::new().with_cpu();
         let ai = RustAI::new(config).unwrap();
 
-        let train_config = ai.train()
-            .config_file("train.yaml")
-            .build()
-            .unwrap();
+        let train_config = ai.train().config_file("train.yaml").build().unwrap();
 
         assert_eq!(train_config.config_path, "train.yaml");
     }

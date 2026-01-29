@@ -187,9 +187,8 @@ pub use cubecl::{
 
 // Unified API facade
 pub use facade::{
-    AdapterType, FinetuneBuilder, FinetuneConfig, QuantizeBuilder, QuantizeConfig,
-    QuantizeMethod, RustAI, RustAIConfig, RustAIInfo, TrainBuilder, TrainConfig,
-    VsaBuilder, VsaConfig,
+    AdapterType, FinetuneBuilder, FinetuneConfig, QuantizeBuilder, QuantizeConfig, QuantizeMethod,
+    RustAI, RustAIConfig, RustAIInfo, TrainBuilder, TrainConfig, VsaBuilder, VsaConfig,
 };
 
 // Ecosystem information
