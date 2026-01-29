@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main]
 
+# Permissions required for security audit to post results
+permissions:
+  contents: read
+  security-events: write
+  issues: write
+
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
