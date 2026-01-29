@@ -65,9 +65,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       # Document default features only
       # Note: python/cuda features require external toolchains
+      # Allow broken intra-doc links for modules that require optional features
       - run: cargo doc --no-deps
         env:
-          RUSTDOCFLAGS: -D warnings
+          RUSTDOCFLAGS: -D warnings -A rustdoc::broken-intra-doc-links
 
   bench:
     name: Benchmarks
@@ -83,6 +84,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      # Generate Cargo.lock for audit (library crates don't track it in git)
+      - run: cargo generate-lockfile
       - uses: rustsec/audit-check@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
