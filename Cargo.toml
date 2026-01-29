@@ -3,7 +3,7 @@
 # =============================================================================
 [package]
 name = "rust-ai-core"
-version = "0.3.2"
+version = "0.3.3"
 edition = "2021"
 
 # Why Rust 1.92?
@@ -122,8 +122,8 @@ vsa-optim-rs = "0.1"
 # Why tritter-accel?
 # - GPU-accelerated ternary operations
 # - Bridges BitNet, VSA, and ternary computations
-# - v0.1.3 includes rlib support and PyO3 0.27 alignment
-tritter-accel = "0.1"
+# - v0.2.2 makes PyO3 bindings optional, fixing cdylib conflicts
+tritter-accel = "0.2"
 
 # =============================================================================
 # OPTIONAL DEPENDENCIES - GPU SUPPORT
