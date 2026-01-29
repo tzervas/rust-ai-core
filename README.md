@@ -23,7 +23,7 @@ rust-ai-core is the central hub for 8 specialized AI/ML crates, providing:
 | [bitnet-quantize](https://crates.io/crates/bitnet-quantize) | BitNet 1.58-bit quantization | 0.2 |
 | [trit-vsa](https://crates.io/crates/trit-vsa) | Ternary VSA operations | 0.2 |
 | [vsa-optim-rs](https://crates.io/crates/vsa-optim-rs) | VSA-based optimization | 0.1 |
-| [tritter-accel](https://crates.io/crates/tritter-accel) | Ternary GPU acceleration | 0.1 |
+| [tritter-accel](https://crates.io/crates/tritter-accel) | Ternary GPU acceleration | 0.1.3 |
 
 ## Installation
 

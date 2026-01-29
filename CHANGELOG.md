@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-01-28
+
+### Changed
+- Updated PyO3 from 0.22 to 0.27 for Python 3.13/3.14 compatibility
+- Updated numpy bindings from 0.22 to 0.27 (aligned with PyO3)
+- Aligned with tritter-accel v0.1.3 for ecosystem version consistency
+
+### Dependencies
+- pyo3 = "0.27" (previously 0.22)
+- numpy = "0.27" (previously 0.22)
+- tritter-accel = "0.1" (resolves to 0.1.3)
+
 ## [0.3.0] - 2026-01-28
 
 ### Added
@@ -144,7 +156,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Zero-cost abstractions**: Traits compile to static dispatch
 - **Fail-fast validation**: Configuration errors caught at construction
 
-[Unreleased]: https://github.com/tzervas/rust-ai-core/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/tzervas/rust-ai-core/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/tzervas/rust-ai-core/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/tzervas/rust-ai-core/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/tzervas/rust-ai-core/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tzervas/rust-ai-core/releases/tag/v0.1.0
