@@ -125,6 +125,8 @@
 #![warn(clippy::all)]
 #![warn(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
+// Allow doc_markdown as technical terms (LoRA, DoRA, etc.) shouldn't need backticks
+#![allow(clippy::doc_markdown)]
 
 // =============================================================================
 // FOUNDATION MODULES

@@ -253,6 +253,7 @@ pub mod vsa_optim {
 /// let output = matmul.forward(&weights, &input)?;
 /// ```
 pub mod tritter {
+    #[allow(unused_imports)]
     pub use tritter_accel::*;
 }
 

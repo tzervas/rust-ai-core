@@ -42,7 +42,7 @@ use candle_core::Device;
 // CONFIGURATION
 // =============================================================================
 
-/// Configuration for the RustAI facade.
+/// Configuration for the `RustAI` facade.
 ///
 /// This centralizes all configuration options and provides sensible defaults
 /// for the unified API.
@@ -115,8 +115,8 @@ impl RustAIConfig {
 ///
 /// | Workflow | Description |
 /// |----------|-------------|
-/// | `finetune()` | LoRA, DoRA, AdaLoRA adapter creation |
-/// | `quantize()` | 4-bit (NF4/FP4) and 1.58-bit (BitNet) quantization |
+/// | `finetune()` | `LoRA`, `DoRA`, `AdaLoRA` adapter creation |
+/// | `quantize()` | 4-bit (NF4/FP4) and 1.58-bit (`BitNet`) quantization |
 /// | `vsa()` | VSA-based operations and optimization |
 /// | `train()` | YAML-driven training pipelines |
 ///
@@ -139,7 +139,7 @@ pub struct RustAI {
 }
 
 impl RustAI {
-    /// Create a new RustAI instance.
+    /// Create a new `RustAI` instance.
     ///
     /// Initializes the device and ecosystem information.
     ///
@@ -271,7 +271,7 @@ impl RustAI {
         TrainBuilder::new(self)
     }
 
-    /// Get information about the RustAI environment.
+    /// Get information about the `RustAI` environment.
     ///
     /// Returns a struct containing version info, ecosystem, and device details.
     #[must_use]
@@ -289,7 +289,7 @@ impl RustAI {
     }
 }
 
-/// Information about the RustAI environment.
+/// Information about the `RustAI` environment.
 #[derive(Debug, Clone)]
 pub struct RustAIInfo {
     /// Crate version
@@ -310,6 +310,7 @@ pub struct RustAIInfo {
 
 /// Builder for fine-tuning workflows.
 pub struct FinetuneBuilder<'a> {
+    #[allow(dead_code)]
     ai: &'a RustAI,
     model_path: Option<String>,
     adapter_type: AdapterType,
@@ -358,14 +359,14 @@ impl<'a> FinetuneBuilder<'a> {
         self
     }
 
-    /// Set the LoRA rank.
+    /// Set the `LoRA` rank.
     #[must_use]
     pub fn rank(mut self, rank: usize) -> Self {
         self.rank = rank;
         self
     }
 
-    /// Set the LoRA alpha scaling factor.
+    /// Set the `LoRA` alpha scaling factor.
     #[must_use]
     pub fn alpha(mut self, alpha: f32) -> Self {
         self.alpha = alpha;
@@ -414,9 +415,9 @@ pub struct FinetuneConfig {
     pub model_path: String,
     /// Type of adapter
     pub adapter_type: AdapterType,
-    /// LoRA rank
+    /// `LoRA` rank
     pub rank: usize,
-    /// LoRA alpha
+    /// `LoRA` alpha
     pub alpha: f32,
     /// Dropout rate
     pub dropout: f32,
@@ -440,12 +441,12 @@ pub struct QuantizeBuilder<'a> {
 /// Quantization method.
 #[derive(Debug, Clone, Copy, Default)]
 pub enum QuantizeMethod {
-    /// NF4 (Normal Float 4-bit) - used in QLoRA
+    /// NF4 (Normal Float 4-bit) - used in `QLoRA`
     #[default]
     Nf4,
     /// FP4 (Floating Point 4-bit)
     Fp4,
-    /// BitNet 1.58-bit ternary quantization
+    /// `BitNet` 1.58-bit ternary quantization
     BitNet,
     /// Standard INT8 quantization
     Int8,
