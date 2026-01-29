@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-01-29
+
+### Fixed
+- Fixed GitHub Actions Security Audit permissions ("Resource not accessible by integration" error)
+- Fixed Linux aarch64 wheel builds by using zigbuild for cross-compilation (ring crate compatibility)
+
+### CI/CD
+- Split Linux wheel builds into separate x86_64 and aarch64 jobs
+- Added proper permissions block to CI workflow (contents, security-events, issues)
+
 ## [0.3.3] - 2026-01-29
 
 ### Fixed
@@ -188,7 +198,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Zero-cost abstractions**: Traits compile to static dispatch
 - **Fail-fast validation**: Configuration errors caught at construction
 
-[Unreleased]: https://github.com/tzervas/rust-ai-core/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/tzervas/rust-ai-core/compare/v0.3.4...HEAD
+[0.3.4]: https://github.com/tzervas/rust-ai-core/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/tzervas/rust-ai-core/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/tzervas/rust-ai-core/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/tzervas/rust-ai-core/compare/v0.3.0...v0.3.1
