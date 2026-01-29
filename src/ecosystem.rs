@@ -294,12 +294,12 @@ impl EcosystemInfo {
     #[must_use]
     pub const fn new() -> Self {
         Self {
-            peft_version: "1.0",
-            qlora_version: "1.0",
+            peft_version: "1.0.3",
+            qlora_version: "1.0.5",
             unsloth_version: "1.0",
             axolotl_version: "1.1",
-            bitnet_version: "0.1",
-            trit_version: "0.1",
+            bitnet_version: "0.2",
+            trit_version: "0.2",
             vsa_optim_version: "0.1",
             tritter_version: "0.1",
         }

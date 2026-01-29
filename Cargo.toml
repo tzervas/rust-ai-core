@@ -249,22 +249,3 @@ name = "core_ops"
 # - Prevents conflict with built-in benchmark harness
 harness = false
 
-# =============================================================================
-# REQUIRED UPSTREAM FIXES
-# =============================================================================
-#
-# SAFETENSORS VERSION CONFLICT:
-# candle-core 0.9.x requires safetensors 0.7.0, but peft-rs 1.0.1 and
-# axolotl-rs 1.1.1 use safetensors 0.4.5, causing trait bounds errors.
-#
-# TO FIX: Update these crates and publish new versions to crates.io:
-#
-# 1. peft-rs (https://github.com/tzervas/peft-rs)
-#    Change: safetensors = "0.4" -> safetensors = "0.7"
-#    Publish: peft-rs 1.0.2+
-#
-# 2. axolotl-rs (https://github.com/tzervas/axolotl-rs)
-#    Change: safetensors = "0.4" -> safetensors = "0.7"
-#    Publish: axolotl-rs 1.1.2+
-#
-# After publishing, update versions here and run `cargo update`.

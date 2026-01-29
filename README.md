@@ -2,22 +2,28 @@
 
 [![Crates.io](https://img.shields.io/crates/v/rust-ai-core.svg)](https://crates.io/crates/rust-ai-core) [![PyPI](https://img.shields.io/pypi/v/rust-ai-core-bindings.svg)](https://pypi.org/project/rust-ai-core-bindings/) [![Documentation](https://docs.rs/rust-ai-core/badge.svg)](https://docs.rs/rust-ai-core) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE-MIT)
 
-**Foundation layer for the rust-ai ecosystem**, providing unified abstractions for device selection, error handling, configuration validation, and CubeCL interop.
+**Unified AI engineering toolkit** that orchestrates the complete rust-ai ecosystem into a cohesive API for fine-tuning, quantization, and GPU-accelerated AI operations.
 
-rust-ai-core is the shared foundation that enables a future AI framework built on transparency, traceability, performance, ease of use, repeatability, and customization depth.
+## What is rust-ai-core?
 
-## Design Philosophy
+rust-ai-core is the central hub for 8 specialized AI/ML crates, providing:
 
-**CUDA-first**: All operations prefer GPU execution. CPU is a fallback that emits warnings, not a silent alternative. This ensures users are aware when they're not getting optimal performance.
+- **Unified API**: Single entry point (`RustAI`) for all AI engineering tasks
+- **Foundation Layer**: Device selection, error handling, memory tracking
+- **Ecosystem Re-exports**: Direct access to all component crates
 
-**Ecosystem Integration**: rust-ai-core serves as the foundation for all rust-ai crates, ensuring consistent behavior, unified error handling, and seamless interoperability across the entire stack.
+### Integrated Ecosystem
 
-## Features
-
-- **Unified Device Selection**: CUDA-first with environment variable overrides
-- **Common Error Types**: `CoreError` hierarchy shared across all crates
-- **Trait Interfaces**: `ValidatableConfig`, `Quantize`, `Dequantize`, `GpuDispatchable`
-- **CubeCL Interop**: Candle ↔ CubeCL tensor conversion utilities
+| Crate | Purpose | Version |
+|-------|---------|---------|
+| [peft-rs](https://crates.io/crates/peft-rs) | LoRA, DoRA, AdaLoRA adapters | 1.0.3 |
+| [qlora-rs](https://crates.io/crates/qlora-rs) | 4-bit quantized LoRA | 1.0.5 |
+| [unsloth-rs](https://crates.io/crates/unsloth-rs) | Optimized transformer blocks | 1.0 |
+| [axolotl-rs](https://crates.io/crates/axolotl-rs) | YAML-driven fine-tuning | 1.1 |
+| [bitnet-quantize](https://crates.io/crates/bitnet-quantize) | BitNet 1.58-bit quantization | 0.2 |
+| [trit-vsa](https://crates.io/crates/trit-vsa) | Ternary VSA operations | 0.2 |
+| [vsa-optim-rs](https://crates.io/crates/vsa-optim-rs) | VSA-based optimization | 0.1 |
+| [tritter-accel](https://crates.io/crates/tritter-accel) | Ternary GPU acceleration | 0.1 |
 
 ## Installation
 
@@ -25,10 +31,17 @@ rust-ai-core is the shared foundation that enables a future AI framework built o
 
 ```toml
 [dependencies]
-rust-ai-core = "0.2"
+# Full ecosystem integration
+rust-ai-core = "0.3"
 
 # With CUDA support
-rust-ai-core = { version = "0.2", features = ["cuda"] }
+rust-ai-core = { version = "0.3", features = ["cuda"] }
+
+# With Python bindings
+rust-ai-core = { version = "0.3", features = ["python"] }
+
+# Everything
+rust-ai-core = { version = "0.3", features = ["full"] }
 ```
 
 ### Python
@@ -37,353 +50,201 @@ rust-ai-core = { version = "0.2", features = ["cuda"] }
 pip install rust-ai-core-bindings
 ```
 
-The Python package provides bindings for memory estimation, device detection, and dtype utilities.
+## Quick Start Guide
 
-## Quick Start
+### Option 1: Unified API (Recommended)
 
-### Rust
+The `RustAI` facade provides a simplified interface for common tasks:
 
 ```rust
-use rust_ai_core::{get_device, DeviceConfig, CoreError, Result};
+use rust_ai_core::{RustAI, RustAIConfig, AdapterType, QuantizeMethod};
 
-fn main() -> Result<()> {
-    // Get CUDA device with automatic fallback + warning
-    let device = get_device(&DeviceConfig::default())?;
+fn main() -> rust_ai_core::Result<()> {
+    // Initialize with sensible defaults
+    let ai = RustAI::new(RustAIConfig::default())?;
 
-    // Or with environment-based configuration
-    let config = DeviceConfig::from_env();
-    let device = get_device(&config)?;
+    println!("Device: {:?}", ai.device());
+    println!("Ecosystem crates: {:?}", ai.ecosystem());
+
+    // Configure fine-tuning with LoRA
+    let finetune = ai.finetune()
+        .model("meta-llama/Llama-2-7b")
+        .adapter(AdapterType::Lora)
+        .rank(64)
+        .alpha(16.0)
+        .build()?;
+
+    // Configure quantization
+    let quant = ai.quantize()
+        .method(QuantizeMethod::Nf4)
+        .bits(4)
+        .group_size(64)
+        .build();
+
+    // Configure VSA operations
+    let vsa = ai.vsa()
+        .dimension(10000)
+        .build();
 
     Ok(())
 }
 ```
 
-### Python
+### Option 2: Direct Crate Access
+
+Access individual crates through the `ecosystem` module:
+
+```rust
+use rust_ai_core::ecosystem::peft::{LoraConfig, LoraLinear};
+use rust_ai_core::ecosystem::qlora::{QLoraConfig, QuantizedTensor};
+use rust_ai_core::ecosystem::bitnet::{BitNetConfig, TernaryLinear};
+use rust_ai_core::ecosystem::trit::{TritVector, PackedTritVec};
+
+fn main() -> rust_ai_core::Result<()> {
+    // Use peft-rs directly
+    let lora_config = LoraConfig::new(64, 16.0);
+
+    // Use trit-vsa directly
+    let vec = TritVector::random(10000);
+
+    Ok(())
+}
+```
+
+### Option 3: Foundation Layer Only
+
+Use just the core utilities without ecosystem crates:
+
+```rust
+use rust_ai_core::{get_device, DeviceConfig, CoreError, Result};
+use rust_ai_core::{estimate_tensor_bytes, MemoryTracker};
+
+fn main() -> Result<()> {
+    // CUDA-first device selection
+    let device = get_device(&DeviceConfig::default())?;
+
+    // Memory estimation
+    let shape = [1, 4096, 4096];
+    let bytes = estimate_tensor_bytes(&shape, candle_core::DType::F32);
+    println!("Tensor size: {} MB", bytes / 1024 / 1024);
+
+    // Memory tracking
+    let tracker = MemoryTracker::new(8 * 1024 * 1024 * 1024); // 8 GB
+    tracker.try_allocate(bytes)?;
+
+    Ok(())
+}
+```
+
+## API Reference
+
+### Unified API (`RustAI`)
+
+```rust
+// Initialize
+let ai = RustAI::new(RustAIConfig::default())?;
+
+// Workflows
+ai.finetune()   // -> FinetuneBuilder (LoRA, DoRA, AdaLoRA)
+ai.quantize()   // -> QuantizeBuilder (NF4, FP4, BitNet, INT8)
+ai.vsa()        // -> VsaBuilder (Vector Symbolic Architectures)
+ai.train()      // -> TrainBuilder (Axolotl-style YAML config)
+
+// Info
+ai.device()     // Active device (CPU or CUDA)
+ai.ecosystem()  // Ecosystem crate versions
+ai.is_cuda()    // Whether CUDA is active
+ai.info()       // Full environment info
+```
+
+### Configuration Options
+
+```rust
+let config = RustAIConfig::new()
+    .with_verbose(true)                    // Enable verbose logging
+    .with_memory_limit(8 * 1024 * 1024 * 1024)  // 8 GB limit
+    .with_cpu()                            // Force CPU execution
+    .with_cuda_device(0);                  // Select CUDA device
+```
+
+### Ecosystem Modules
+
+| Module | Crate | Key Types |
+|--------|-------|-----------|
+| `ecosystem::peft` | peft-rs | `LoraConfig`, `LoraLinear`, `DoraConfig` |
+| `ecosystem::qlora` | qlora-rs | `QLoraConfig`, `QuantizedTensor`, `Nf4Quantizer` |
+| `ecosystem::unsloth` | unsloth-rs | `FlashAttention`, `SwiGLU`, `RMSNorm` |
+| `ecosystem::axolotl` | axolotl-rs | `AxolotlConfig`, `TrainingPipeline` |
+| `ecosystem::bitnet` | bitnet-quantize | `BitNetConfig`, `TernaryLinear` |
+| `ecosystem::trit` | trit-vsa | `TritVector`, `PackedTritVec`, `HdcEncoder` |
+| `ecosystem::vsa_optim` | vsa-optim-rs | `VsaOptimizer`, `GradientPredictor` |
+| `ecosystem::tritter` | tritter-accel | `TritterRuntime`, `TernaryMatmul` |
+
+### Foundation Utilities
+
+| Function | Purpose |
+|----------|---------|
+| `get_device()` | CUDA-first device selection with fallback |
+| `warn_if_cpu()` | One-time warning when running on CPU |
+| `estimate_tensor_bytes()` | Memory estimation for tensor shapes |
+| `estimate_attention_memory()` | O(n^2) attention memory estimation |
+| `MemoryTracker::new()` | Thread-safe memory tracking with limits |
+| `init_logging()` | Initialize tracing with env filter |
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `RUST_AI_FORCE_CPU` | Force CPU execution | `false` |
+| `RUST_AI_CUDA_DEVICE` | CUDA device ordinal | `0` |
+| `RUST_LOG` | Logging level | `info` |
+
+## Feature Flags
+
+| Feature | Description | Dependencies |
+|---------|-------------|--------------|
+| `cuda` | CUDA support via CubeCL | cubecl, cubecl-cuda |
+| `python` | Python bindings via PyO3 | pyo3, numpy |
+| `full` | All features enabled | cuda, python |
+
+## Design Philosophy
+
+- **CUDA-first**: GPU preferred, CPU fallback with warnings
+- **Zero-cost abstractions**: Traits compile to static dispatch
+- **Fail-fast validation**: Configuration errors caught at construction
+- **Unified API**: Single entry point for all AI engineering tasks
+- **Direct access**: Full crate APIs available when needed
+
+## Examples
+
+See the [examples/](examples/) directory:
+
+- `device_selection.rs` - Device configuration patterns
+- `memory_tracking.rs` - Memory estimation and tracking
+- `error_handling.rs` - Error handling patterns
+
+## Python Bindings
 
 ```python
 import rust_ai_core_bindings as rac
 
-# Memory estimation for AI training planning
-batch, heads, seq_len, head_dim = 1, 32, 4096, 128
-attention_bytes = rac.estimate_attention_memory(batch, heads, seq_len, head_dim, "bf16")
-print(f"Attention layer: {attention_bytes / 1024**2:.1f} MB")
+# Memory estimation
+bytes = rac.estimate_tensor_bytes([1, 4096, 4096], "f32")
+print(f"Tensor: {bytes / 1024**2:.1f} MB")
 
-# Tensor memory estimation
-shape = [1, 512, 4096]
-tensor_bytes = rac.estimate_tensor_bytes(shape, "f32")
-print(f"Tensor: {tensor_bytes / 1024**2:.1f} MB")
-
-# Memory tracking for GPU budget management
-tracker = rac.create_memory_tracker(limit_bytes=8 * 1024**3)  # 8 GB limit
-rac.tracker_allocate(tracker, tensor_bytes)
-print(f"Current: {rac.tracker_allocated_bytes(tracker)} bytes")
-print(f"Peak: {rac.tracker_peak_bytes(tracker)} bytes")
+# Attention memory (for model planning)
+attn_bytes = rac.estimate_attention_memory(1, 32, 4096, 128, "bf16")
+print(f"Attention: {attn_bytes / 1024**2:.1f} MB")
 
 # Device detection
 if rac.cuda_available():
-    device_info = rac.get_device_info()
-    print(f"Device: {device_info['name']}")
-
-# Data type utilities
-print(f"f32 size: {rac.bytes_per_dtype('f32')} bytes")
-print(f"bf16 is float: {rac.is_floating_point_dtype('bf16')}")
-print(f"bf16 accumulator: {rac.accumulator_dtype('bf16')}")
-```
-
-## Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| `RUST_AI_FORCE_CPU` | Set to `1` or `true` to force CPU execution |
-| `RUST_AI_CUDA_DEVICE` | CUDA device ordinal (default: 0) |
-
-Legacy variables from individual crates are also supported:
-- `AXOLOTL_FORCE_CPU`, `AXOLOTL_CUDA_DEVICE`
-- `VSA_OPTIM_FORCE_CPU`, `VSA_OPTIM_CUDA_DEVICE`
-
-## Modules
-
-### `device`
-
-CUDA-first device selection with fallback warnings.
-
-```rust
-use rust_ai_core::{get_device, DeviceConfig, warn_if_cpu};
-
-// Explicit configuration
-let config = DeviceConfig::new()
-    .with_cuda_device(0)
-    .with_force_cpu(false)
-    .with_crate_name("my-crate");
-
-let device = get_device(&config)?;
-
-// In hot paths, warn if on CPU
-warn_if_cpu(&device, "my-crate");
-```
-
-### `error`
-
-Common error types shared across the ecosystem.
-
-```rust
-use rust_ai_core::{CoreError, Result};
-
-fn my_function() -> Result<()> {
-    // Use convenient constructors
-    if rank == 0 {
-        return Err(CoreError::invalid_config("rank must be positive"));
-    }
-    
-    if shape_a != shape_b {
-        return Err(CoreError::shape_mismatch(shape_a, shape_b));
-    }
-    
-    Ok(())
-}
-```
-
-### `traits`
-
-Common trait interfaces for configuration and GPU dispatch.
-
-```rust
-use rust_ai_core::{ValidatableConfig, GpuDispatchable, CoreError, Result};
-
-#[derive(Clone)]
-struct MyConfig {
-    rank: usize,
-}
-
-impl ValidatableConfig for MyConfig {
-    fn validate(&self) -> Result<()> {
-        if self.rank == 0 {
-            return Err(CoreError::invalid_config("rank must be > 0"));
-        }
-        Ok(())
-    }
-}
-```
-
-### `cubecl` (feature: `cuda`)
-
-CubeCL ↔ Candle tensor interop.
-
-```rust
-use rust_ai_core::{has_cubecl_cuda_support, candle_to_cubecl_handle, cubecl_to_candle_tensor};
-
-if has_cubecl_cuda_support() {
-    let buffer = candle_to_cubecl_handle(&tensor)?;
-    // ... launch CubeCL kernel with buffer.bytes ...
-    let output = cubecl_to_candle_tensor(&output_buffer, &device)?;
-}
-```
-
-## Crate Integration
-
-All rust-ai crates depend on rust-ai-core as their foundation:
-
-```
-rust-ai-core (Foundation Layer)
-    │
-    ├── trit-vsa          - Ternary Vector Symbolic Architectures
-    ├── bitnet-quantize   - 1.58-bit quantization
-    ├── peft-rs           - LoRA, DoRA, AdaLoRA adapters
-    ├── qlora-rs          - 4-bit quantization + QLoRA
-    ├── unsloth-rs        - GPU-optimized transformer kernels
-    ├── vsa-optim-rs      - VSA optimizers and operations
-    ├── axolotl-rs        - High-level fine-tuning orchestration
-    └── tritter-accel     - Ternary GPU acceleration
-```
-
-Each crate uses rust-ai-core's:
-- **Device selection**: Consistent CUDA-first device logic
-- **Error types**: Shared `CoreError` hierarchy with domain-specific extensions
-- **Traits**: Common interfaces (`ValidatableConfig`, `Quantize`, etc.)
-- **CubeCL interop**: Unified Candle ↔ CubeCL tensor conversion
-
-## Public API Reference
-
-### Core Types
-
-- **`DeviceConfig`** - Configuration builder for device selection
-- **`CoreError`** - Unified error type with domain-specific variants
-- **`Result<T>`** - Type alias for `std::result::Result<T, CoreError>`
-- **`TensorBuffer`** - Intermediate representation for Candle ↔ CubeCL conversion
-
-### Traits
-
-- **`ValidatableConfig`** - Configuration validation interface
-  ```rust
-  trait ValidatableConfig: Clone + Send + Sync {
-      fn validate(&self) -> Result<()>;
-  }
-  ```
-
-- **`Quantize<Q>`** - Tensor quantization (full precision → quantized)
-  ```rust
-  trait Quantize<Q>: Send + Sync {
-      fn quantize(&self, tensor: &Tensor, device: &Device) -> Result<Q>;
-  }
-  ```
-
-- **`Dequantize<Q>`** - Tensor dequantization (quantized → full precision)
-  ```rust
-  trait Dequantize<Q>: Send + Sync {
-      fn dequantize(&self, quantized: &Q, device: &Device) -> Result<Tensor>;
-  }
-  ```
-
-- **`GpuDispatchable`** - GPU/CPU dispatch pattern for operations with both implementations
-  ```rust
-  trait GpuDispatchable: Send + Sync {
-      type Input;
-      type Output;
-
-      fn dispatch_gpu(&self, input: &Self::Input, device: &Device) -> Result<Self::Output>;
-      fn dispatch_cpu(&self, input: &Self::Input, device: &Device) -> Result<Self::Output>;
-      fn dispatch(&self, input: &Self::Input, device: &Device) -> Result<Self::Output>;
-      fn gpu_available(&self) -> bool;
-  }
-  ```
-
-### Device Selection Functions
-
-- **`get_device(config: &DeviceConfig) -> Result<Device>`** - Get device with CUDA-first fallback
-- **`warn_if_cpu(device: &Device, crate_name: &str)`** - Emit one-time CPU warning
-
-### CubeCL Interop (feature: `cuda`)
-
-- **`has_cubecl_cuda_support() -> bool`** - Check if CubeCL CUDA runtime is available
-- **`candle_to_cubecl_handle(tensor: &Tensor) -> Result<TensorBuffer>`** - Convert Candle tensor to CubeCL buffer
-- **`cubecl_to_candle_tensor(buffer: &TensorBuffer, device: &Device) -> Result<Tensor>`** - Convert CubeCL buffer to Candle tensor
-- **`allocate_output_buffer(shape: &[usize], dtype: DType) -> Result<TensorBuffer>`** - Pre-allocate CubeCL output buffer
-
-## Error Handling Philosophy
-
-rust-ai-core provides a structured error hierarchy that balances specificity with ergonomics:
-
-```rust
-use rust_ai_core::{CoreError, Result};
-
-fn validate_shapes(a: &[usize], b: &[usize]) -> Result<()> {
-    if a.len() != b.len() {
-        return Err(CoreError::dim_mismatch(
-            format!("expected {} dims, got {}", a.len(), b.len())
-        ));
-    }
-    if a != b {
-        return Err(CoreError::shape_mismatch(a, b));
-    }
-    Ok(())
-}
-```
-
-Crates should extend `CoreError` with domain-specific variants:
-
-```rust
-#[derive(Error, Debug)]
-pub enum PeftError {
-    #[error("adapter '{0}' not found")]
-    AdapterNotFound(String),
-
-    #[error(transparent)]
-    Core(#[from] CoreError),
-}
-```
-
-## Future Framework Goals
-
-rust-ai-core is designed to enable a future AI framework with these principles:
-
-1. **Transparency** - Clear, understandable operations at every level
-2. **Traceability** - Track what happens at each step with detailed logging
-3. **Performance** - GPU-accelerated, optimized for production workloads
-4. **Ease of use** - Simple high-level API with sensible defaults
-5. **Repeatability** - Deterministic, reproducible results
-6. **Customization depth** - Users can go as deep as they want, from high-level APIs to custom kernels
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for design decisions and extension points.
-
-## Python API Reference
-
-The `rust-ai-core-bindings` package exposes the following functions:
-
-### Memory Estimation
-
-```python
-# Estimate tensor memory
-estimate_tensor_bytes(shape: list[int], dtype: str) -> int
-
-# Estimate attention layer memory (Q, K, V + attention weights + output)
-estimate_attention_memory(
-    batch_size: int,
-    num_heads: int,
-    seq_len: int,
-    head_dim: int,
-    dtype: str
-) -> int
-```
-
-### Memory Tracking
-
-```python
-# Create a memory tracker with optional limit
-create_memory_tracker(limit_bytes: int = 0) -> MemoryTracker
-
-# Record allocation (raises if exceeds limit)
-tracker_allocate(tracker: MemoryTracker, bytes: int)
-
-# Record deallocation
-tracker_deallocate(tracker: MemoryTracker, bytes: int)
-
-# Query tracker state
-tracker_allocated_bytes(tracker: MemoryTracker) -> int
-tracker_peak_bytes(tracker: MemoryTracker) -> int
-tracker_would_fit(tracker: MemoryTracker, bytes: int) -> bool
-
-# Reset tracker to initial state
-tracker_reset(tracker: MemoryTracker)
-```
-
-### Device Detection
-
-```python
-# Check CUDA availability
-cuda_available() -> bool
-
-# Get device information (returns dict with type, ordinal, name)
-get_device_info(force_cpu: bool = False, cuda_device: int = 0) -> dict
-```
-
-### Data Type Utilities
-
-```python
-# Get bytes per element for dtype
-bytes_per_dtype(dtype: str) -> int
-
-# Check if dtype is floating point
-is_floating_point_dtype(dtype: str) -> bool
-
-# Get accumulator dtype for mixed precision
-accumulator_dtype(dtype: str) -> str
-```
-
-### Supported Data Types
-
-- `"f32"` - 32-bit float
-- `"f16"` - 16-bit float
-- `"bf16"` - Brain float 16
-- `"f64"` - 64-bit float
-- `"i64"` - 64-bit integer
-- `"u32"` - 32-bit unsigned integer
-- `"u8"` - 8-bit unsigned integer
-
-### Logging
-
-```python
-# Initialize logging (call once at startup)
-init_logging(level: str = "info")  # debug, info, warn, error
+    info = rac.get_device_info()
+    print(f"CUDA device: {info['name']}")
+
+# Memory tracking
+tracker = rac.create_memory_tracker(8 * 1024**3)  # 8 GB limit
+rac.tracker_allocate(tracker, bytes)
+print(f"Allocated: {rac.tracker_allocated_bytes(tracker)} bytes")
 ```
 
 ## License
@@ -397,3 +258,8 @@ Contributions welcome! Please ensure:
 - Tests pass: `cargo test`
 - Lints pass: `cargo clippy --all-targets --all-features`
 - Code is formatted: `cargo fmt`
+
+## See Also
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Design decisions and extension points
+- [docs.rs/rust-ai-core](https://docs.rs/rust-ai-core) - Full API documentation
