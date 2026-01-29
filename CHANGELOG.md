@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-01-28
+
+### Added
+
+#### Ecosystem Integration
+- **Full rust-ai ecosystem orchestration** - rust-ai-core now integrates all 8 ecosystem crates
+- **`ecosystem` module** - Unified re-exports from all ecosystem crates:
+  - `ecosystem::peft` - LoRA, DoRA, AdaLoRA adapters (peft-rs 1.0.3)
+  - `ecosystem::qlora` - 4-bit quantized LoRA (qlora-rs 1.0.5)
+  - `ecosystem::unsloth` - Optimized transformer blocks (unsloth-rs 1.0)
+  - `ecosystem::axolotl` - YAML-driven fine-tuning (axolotl-rs 1.1)
+  - `ecosystem::bitnet` - BitNet 1.58-bit quantization (bitnet-quantize 0.2)
+  - `ecosystem::trit` - Ternary VSA operations (trit-vsa 0.2)
+  - `ecosystem::vsa_optim` - VSA-based optimization (vsa-optim-rs 0.1)
+  - `ecosystem::tritter` - Ternary GPU acceleration (tritter-accel 0.1)
+
+#### Unified API Facade
+- **`RustAI` struct** - Single entry point for all AI engineering tasks
+- **`RustAIConfig`** - Configuration with builder pattern
+- **Workflow builders**:
+  - `FinetuneBuilder` - Configure LoRA, DoRA, AdaLoRA adapters
+  - `QuantizeBuilder` - Configure NF4, FP4, BitNet, INT8 quantization
+  - `VsaBuilder` - Configure VSA operations
+  - `TrainBuilder` - Configure Axolotl-style YAML pipelines
+- **`EcosystemInfo`** - Version info for all integrated crates
+
+### Changed
+- Updated description to reflect unified toolkit role
+- Updated keywords to include fine-tuning and quantization
+- Upgraded PyO3 to 0.27 for Python 3.13/3.14 support
+- Updated bitnet-quantize to 0.2, trit-vsa to 0.2
+
+### Dependencies
+- peft-rs = "1.0" (resolves to 1.0.3)
+- qlora-rs = "1.0" (resolves to 1.0.4)
+- unsloth-rs = "1.0"
+- axolotl-rs = "1.1"
+- bitnet-quantize = "0.2"
+- trit-vsa = "0.2"
+- vsa-optim-rs = "0.1"
+- tritter-accel = "0.1"
+
+### Removed
+- Removed obsolete "REQUIRED UPSTREAM FIXES" documentation (peft-rs 1.0.3 resolved safetensors compatibility)
+
 ## [0.2.0] - 2026-01-25
 
 ### Added
@@ -99,6 +144,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Zero-cost abstractions**: Traits compile to static dispatch
 - **Fail-fast validation**: Configuration errors caught at construction
 
-[Unreleased]: https://github.com/tzervas/rust-ai-core/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/tzervas/rust-ai-core/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/tzervas/rust-ai-core/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/tzervas/rust-ai-core/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tzervas/rust-ai-core/releases/tag/v0.1.0
