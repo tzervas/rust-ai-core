@@ -1,0 +1,48 @@
+{
+  "name": "@rust-ai/core",
+  "version": "0.3.1",
+  "description": "TypeScript bindings for rust-ai-core - AI engineering toolkit",
+  "keywords": ["machine-learning", "ai", "memory", "cuda", "gpu", "tensor", "rust", "napi", "wasm"],
+  "author": "Tyler Zervas <tz-dev@vectorweight.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tzervas/rust-ai-core.git",
+    "directory": "typescript"
+  },
+  "main": "./dist/node.js",
+  "module": "./dist/browser.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "node": { "import": "./dist/node.mjs", "require": "./dist/node.js", "types": "./dist/index.d.ts" },
+      "browser": { "import": "./dist/browser.mjs", "types": "./dist/index.d.ts" },
+      "default": "./dist/node.js"
+    },
+    "./wasm": { "import": "./dist/wasm/rust_ai_core.js", "types": "./dist/wasm/rust_ai_core.d.ts" }
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "engines": { "node": ">=14.0.0" },
+  "scripts": {
+    "build": "npm run build:native && npm run build:ts",
+    "build:native": "napi build --platform --release",
+    "build:ts": "tsc",
+    "build:wasm": "wasm-pack build --target web --features wasm --out-dir typescript/dist/wasm ..",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests --ext .ts"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2.18.0",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0"
+  },
+  "napi": {
+    "name": "rust-ai-core",
+    "triples": {
+      "defaults": true,
+      "additional": ["x86_64-unknown-linux-musl", "aarch64-unknown-linux-gnu", "aarch64-apple-darwin"]
+    }
+  }
+}

@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-01-29
+
+### Added
+
+#### TypeScript/JavaScript Bindings
+- **Node.js bindings via napi-rs** (`napi` feature)
+  - Native performance for ML training orchestration in Node.js
+  - Memory tracker, device selection, and dtype utilities
+  - Stable ABI across Node.js versions via N-API v4
+- **WebAssembly bindings via wasm-bindgen** (`wasm` feature)
+  - Browser/WASM compilation support
+  - Isomorphic support for TensorFlow.js/ONNX.js interop
+  - Zero-copy array sharing via TypedArrays
+- **`typescript` module** - Shared implementation for NAPI and WASM bindings
+- **`full-bindings` feature flag** - Enables all binding types (CUDA, Python, NAPI, WASM)
+
+### Dependencies
+
+- napi = "2.16" (optional, `napi` feature)
+- napi-derive = "2.16" (optional, `napi` feature)
+- wasm-bindgen = "0.2" (optional, `wasm` feature)
+- js-sys = "0.3" (optional, `wasm` feature)
+
 ## [0.3.1] - 2026-01-28
 
 ### Changed
@@ -156,7 +179,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Zero-cost abstractions**: Traits compile to static dispatch
 - **Fail-fast validation**: Configuration errors caught at construction
 
-[Unreleased]: https://github.com/tzervas/rust-ai-core/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/tzervas/rust-ai-core/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/tzervas/rust-ai-core/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/tzervas/rust-ai-core/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/tzervas/rust-ai-core/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/tzervas/rust-ai-core/compare/v0.1.0...v0.2.0

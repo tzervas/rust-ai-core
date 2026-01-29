@@ -111,7 +111,10 @@
 //! |---------|-------------|--------------|
 //! | `cuda` | Enable CUDA support via Candle and CubeCL | cubecl, cubecl-cuda |
 //! | `python` | Enable Python bindings via PyO3 | pyo3, numpy |
-//! | `full` | Enable both CUDA and Python | cuda, python |
+//! | `napi` | Enable Node.js bindings via napi-rs | napi, napi-derive |
+//! | `wasm` | Enable WebAssembly bindings via wasm-bindgen | wasm-bindgen, js-sys |
+//! | `full` | Enable CUDA and Python | cuda, python |
+//! | `full-bindings` | Enable all bindings | cuda, python, napi, wasm |
 //!
 //! ## Environment Variables
 //!
@@ -144,6 +147,9 @@ pub mod cubecl;
 
 #[cfg(feature = "python")]
 pub mod python;
+
+#[cfg(any(feature = "napi", feature = "wasm"))]
+pub mod typescript;
 
 // =============================================================================
 // ECOSYSTEM INTEGRATION MODULES

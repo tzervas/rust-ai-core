@@ -3,7 +3,7 @@
 # =============================================================================
 [package]
 name = "rust-ai-core"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 
 # Why Rust 1.92?
@@ -161,6 +161,34 @@ pyo3 = { version = "0.27", features = ["extension-module", "generate-import-lib"
 numpy = { version = "0.27", optional = true }
 
 # =============================================================================
+# OPTIONAL DEPENDENCIES - TYPESCRIPT/JAVASCRIPT BINDINGS
+# =============================================================================
+# napi-rs: Node.js native bindings via N-API
+# Why napi-rs?
+# - Native performance for Node.js (no WASM overhead)
+# - Stable ABI across Node.js versions via N-API
+# - Industry standard for Rust-Node.js interop
+#
+# Why napi4 feature?
+# - N-API v4 provides async operations and thread-safe functions
+# - Supported by Node.js 10.16+ (covers all actively maintained versions)
+napi = { version = "2.16", default-features = false, features = ["napi4"], optional = true }
+napi-derive = { version = "2.16", optional = true }
+
+# wasm-bindgen: WebAssembly bindings for browser
+# Why wasm-bindgen?
+# - Industry standard for Rust-to-WASM compilation
+# - Enables browser support for TensorFlow.js/ONNX.js interop
+# - Zero-copy array sharing via TypedArrays
+wasm-bindgen = { version = "0.2", optional = true }
+
+# js-sys: JavaScript standard library bindings
+# Why js-sys?
+# - Provides Array, Object, and other JS types for WASM interop
+# - Required for returning complex types to JavaScript
+js-sys = { version = "0.3", optional = true }
+
+# =============================================================================
 # DEV DEPENDENCIES
 # =============================================================================
 [dev-dependencies]
@@ -182,7 +210,7 @@ tokio = { version = "1.49", features = ["full"] }
 # =============================================================================
 [features]
 # Default includes all ecosystem crates (they're required dependencies)
-# Users can opt-in to CUDA and Python bindings
+# Users can opt-in to CUDA, Python, and TypeScript bindings
 default = []
 
 # CUDA support
@@ -199,8 +227,25 @@ cuda = ["candle-core/cuda", "dep:cubecl", "dep:cubecl-cuda"]
 # - Rust-only users skip Python toolchain requirement
 python = ["dep:pyo3", "dep:numpy"]
 
+# Node.js bindings via napi-rs
+# Why this feature?
+# - Enables native Node.js extension module compilation
+# - Provides peak performance for ML training orchestration in Node.js
+# - Only needed when building @rust-ai/core npm package
+napi = ["dep:napi", "dep:napi-derive"]
+
+# WebAssembly bindings via wasm-bindgen
+# Why this feature?
+# - Enables browser/WASM compilation
+# - Provides isomorphic support for TensorFlow.js/ONNX.js interop
+# - Only needed when building browser-compatible WASM bundle
+wasm = ["dep:wasm-bindgen", "dep:js-sys"]
+
 # Full feature set (CUDA + Python)
 full = ["cuda", "python"]
+
+# Full feature set with all bindings
+full-bindings = ["cuda", "python", "napi", "wasm"]
 
 # =============================================================================
 # LINTS
